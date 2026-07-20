@@ -1,0 +1,41 @@
+generated: '2026-07-18'
+method: searched
+source: openapi/beyond-pricing-openapi-original.yml
+docs: https://developers.beyondpricing.com/getting-started/authentication/
+standards:
+- RFC 9700 (OAuth 2.0 Security Best Current Practice)
+- RFC 8414 (OAuth 2.0 Authorization Server Metadata)
+authorization_server_metadata: https://developers.beyondpricing.com/.well-known/oauth-authorization-server
+notes: >-
+  Partners use OAuth2 client-credentials on a confidential client; access tokens
+  expire after 1 hour and can be narrowed with user_id (user-scoped) and
+  credential_id (credential-scoped). Individual users use self-service personal
+  access tokens (bpat_ prefix) created in the Beyond dashboard, sent as
+  Authorization: Bearer. IP allowlists can be enforced per application.
+summary:
+  types:
+  - http
+  - oauth2
+  oauth2_flows:
+  - clientCredentials
+schemes:
+- name: oauth2
+  type: oauth2
+  flows:
+  - flow: clientCredentials
+    tokenUrl: /o/token/
+    scopes: 9
+  description: Use OAuth2 client credentials to mint an application token, or add `user_id`
+    and optional `credential_id` in the Authorize dialog to request a user- or credential-scoped
+    token.
+  sources:
+  - openapi/beyond-pricing-openapi-original.yml
+- name: personalAccessToken
+  type: http
+  scheme: bearer
+  bearerFormat: PersonalAccessToken
+  description: Paste a `bpat_...` personal access token. PATs use the same Bearer header as
+    OAuth2 tokens and must still include the runtime-required scopes for each endpoint, even
+    though OpenAPI cannot encode scopes for non-OAuth bearer schemes.
+  sources:
+  - openapi/beyond-pricing-openapi-original.yml
