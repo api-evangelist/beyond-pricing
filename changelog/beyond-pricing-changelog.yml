@@ -1,0 +1,37 @@
+generated: '2026-07-18'
+method: searched
+source: https://developers.beyondpricing.com/release-notes/
+scheme: uri-path-version + dated release notes (newest first), grouped Added / Changed
+current_version: v1
+entries:
+- version: v1
+  date: '2026-07-16'
+  category: Added
+  breaking: false
+  highlights:
+  - New listing.in_active_market_changed webhook — fires when a listing's in-active-market attribute changes in either direction.
+- version: v1
+  date: '2026-07-14'
+  category: Changed
+  breaking: false
+  highlights:
+  - Account refresh endpoint (POST /users/{user_id}/accounts/{account_id}/refresh/) now returns 409 Conflict when a sync is already in progress instead of 202.
+- version: v1
+  date: '2026-07-10'
+  category: Added
+  breaking: false
+  highlights:
+  - Webhooks are live for partners; initial events account.created, account.refreshed, listing.created, listing.refreshed, listing.base_price_changed.
+- version: v1
+  date: '2026-06-30'
+  category: Added / Changed
+  breaking: false
+  highlights:
+  - List users supports filter[email] for exact case-insensitive lookup.
+  - Listing calendar endpoint now requires the reservations:read scope instead of listings:read (existing listings:read tokens were granted reservations:read).
+- version: v1
+  date: '2026-06-19'
+  category: Added
+  breaking: false
+  highlights:
+  - Calendar entries now include amount per pricing factor, plus effective-min-price and effective-max-price.

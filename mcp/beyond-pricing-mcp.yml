@@ -1,0 +1,80 @@
+generated: '2026-07-18'
+method: searched
+status: candidate
+source: https://www.beyondpricing.com/products/str-developers
+notes: >-
+  Beyond markets an official MCP (Model Context Protocol) server in beta on its
+  developer page ("Access Beyond's API & MCP" / "authenticate your MCP access",
+  integrating with Claude and ChatGPT for real-time revenue intelligence), but
+  as of 2026-07-18 no public MCP endpoint URL, transport, or tool manifest is
+  documented on developers.beyondpricing.com and /.well-known/mcp.json returns
+  404. The tools below are a candidate surface DERIVED one-per-operation from
+  the OpenAPI (openapi/beyond-pricing-openapi-original.yml), not the provider's
+  published beta tool list.
+server:
+  name: beyond-pricing
+  official_beta: true
+  transport: http
+  url: null
+  auth: OAuth2 client-credentials or personal access token (bpat_)
+tools:
+- name: list_compsets
+  description: List competitive sets
+  source_operation: openapi/beyond-pricing-openapi-original.yml#list_compsets
+- name: get_compset
+  description: Get a competitive set
+  source_operation: openapi/beyond-pricing-openapi-original.yml#get_compset
+- name: list_listings
+  description: List listings
+  source_operation: openapi/beyond-pricing-openapi-original.yml#list_listings
+- name: get_listing
+  description: Get a listing
+  source_operation: openapi/beyond-pricing-openapi-original.yml#get_listing
+- name: patch_listing_activation
+  description: Enable or disable a listing
+  source_operation: openapi/beyond-pricing-openapi-original.yml#patch_listing_activation
+- name: list_listing_calendar
+  description: Read a listing pricing/availability calendar
+  source_operation: openapi/beyond-pricing-openapi-original.yml#list_listing_calendar
+- name: get_listing_all_customizations
+  description: Get all pricing customizations for a listing
+  source_operation: openapi/beyond-pricing-openapi-original.yml#get_listing_all_customizations
+- name: get_listing_base_price_customization
+  description: Get a listing base-price customization
+  source_operation: openapi/beyond-pricing-openapi-original.yml#get_listing_base_price_customization
+- name: patch_listing_base_price_customization
+  description: Set a listing base-price customization
+  source_operation: openapi/beyond-pricing-openapi-original.yml#patch_listing_base_price_customization
+- name: get_listing_min_max_prices_customization
+  description: Get a listing min/max price customization
+  source_operation: openapi/beyond-pricing-openapi-original.yml#get_listing_min_max_prices_customization
+- name: patch_listing_min_max_prices_customization
+  description: Set a listing min/max price customization
+  source_operation: openapi/beyond-pricing-openapi-original.yml#patch_listing_min_max_prices_customization
+- name: list_listing_recommendations
+  description: List pricing recommendations for a listing
+  source_operation: openapi/beyond-pricing-openapi-original.yml#list_listing_recommendations
+- name: refresh_listing_reservations
+  description: Trigger a listing reservations refresh
+  source_operation: openapi/beyond-pricing-openapi-original.yml#refresh_listing_reservations
+- name: list_users
+  description: List users
+  source_operation: openapi/beyond-pricing-openapi-original.yml#list_users
+- name: create_user
+  description: Create a user
+  source_operation: openapi/beyond-pricing-openapi-original.yml#create_user
+- name: get_user
+  description: Get a user
+  source_operation: openapi/beyond-pricing-openapi-original.yml#get_user
+- name: list_accounts
+  description: List a user's managed channel accounts
+  source_operation: openapi/beyond-pricing-openapi-original.yml#list_accounts
+- name: create_account
+  description: Connect a managed channel account for a user
+  source_operation: openapi/beyond-pricing-openapi-original.yml#create_account
+- name: refresh_account
+  description: Refresh a managed channel account
+  source_operation: openapi/beyond-pricing-openapi-original.yml#refresh_account
+- name: get_market_insights
+  description: Get market insights for a user
+  source_operation: openapi/beyond-pricing-openapi-original.yml#get_market_insights

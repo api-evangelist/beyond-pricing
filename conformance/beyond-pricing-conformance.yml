@@ -1,0 +1,39 @@
+generated: '2026-07-18'
+method: derived
+source: openapi/beyond-pricing-openapi-original.yml
+standards:
+- id: oauth2
+  conforms: true
+  evidence: openapi securitySchemes type oauth2 (clientCredentials flow); RFC 8414 authorization-server metadata published at /.well-known/oauth-authorization-server
+- id: oauth2-security-bcp-rfc9700
+  conforms: true
+  evidence: docs state the Partners API follows RFC 9700 (OAuth 2.0 Security Best Current Practice)
+- id: rfc8414-authorization-server-metadata
+  conforms: true
+  evidence: /.well-known/oauth-authorization-server returns 200 with issuer/token/introspection/registration/revocation endpoints
+- id: json-api-1.1
+  conforms: true
+  evidence: docs declare JSON:API v1.1; media type application/vnd.api+json; errors[] envelope; page[]/sort/filter conventions
+- id: standard-webhooks
+  conforms: true
+  evidence: webhook deliveries signed with Standard Webhooks (HMAC-SHA256)
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: errors use JSON:API errors[] envelope, not application/problem+json
+- id: rfc8594-sunset-header
+  conforms: false
+  evidence: deprecation policy is documented but no Sunset/Deprecation response header is described
+- id: pagination
+  conforms: true
+  evidence: page-based pagination (page[number]/page[size]) with meta.pagination and links
+- id: idempotency
+  conforms: false
+  evidence: no request-level Idempotency-Key; idempotency addressed only on webhook consumer side (dedupe on webhook-id)
+- id: fhir
+  conforms: false
+- id: fapi
+  conforms: false
+- id: scim
+  conforms: false
+- id: odata
+  conforms: false

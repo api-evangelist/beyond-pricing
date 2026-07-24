@@ -1,0 +1,29 @@
+generated: '2026-07-18'
+method: searched
+source: https://developers.beyondpricing.com/guides/versioning/
+versioning:
+  scheme: uri-path
+  current: v1
+  pattern: https://developers.beyondpricing.com/api/v1/
+  docs: https://developers.beyondpricing.com/guides/versioning/
+  policy: >-
+    A new API version (/api/v2/) is created only for breaking changes (removing
+    an endpoint/method/field, changing a field type or meaning, removing/renaming
+    a query parameter, changing auth/authorization requirements, changing error
+    codes, or changing default behavior). Additive changes (new endpoints,
+    optional params, new response fields, new scopes, new error codes, improved
+    error messages) ship into the current version. Clients must tolerate
+    additive changes and ignore unknown fields. Webhook event schema versions
+    are an independent contract from the API version; a breaking event change
+    ships under a new event type rather than a bumped envelope.
+deprecation:
+  policy_url: https://developers.beyondpricing.com/guides/versioning/
+  documented: true
+  note: >-
+    When a new version is released it is served at /api/v2/ while the previous
+    version continues to operate; breaking changes are enumerated in the
+    versioning policy and announced in the release notes.
+release_notes: https://developers.beyondpricing.com/release-notes/
+sla: null
+status_page: null
+deprecated_operations: []

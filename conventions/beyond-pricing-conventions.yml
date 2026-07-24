@@ -1,0 +1,57 @@
+generated: '2026-07-18'
+method: searched
+source: https://developers.beyondpricing.com/
+docs:
+- https://developers.beyondpricing.com/guides/jsonapi/
+- https://developers.beyondpricing.com/guides/rate-limiting/
+- https://developers.beyondpricing.com/guides/versioning/
+- https://developers.beyondpricing.com/getting-started/authentication/
+data_format:
+  standard: JSON:API v1.1
+  media_type: application/vnd.api+json
+  note: Requests and responses use the JSON:API document structure (data / attributes / relationships / links / meta).
+authentication:
+  styles: [oauth2-client-credentials, personal-access-token]
+  header: 'Authorization: Bearer <token>'
+  token_ttl_oauth2_seconds: 3600
+  see: authentication/beyond-pricing-authentication.yml
+pagination:
+  style: page-based
+  params:
+    page[number]: 1-indexed page number (default 1)
+    page[size]: items per page (default 25, max 100)
+  response_fields:
+    meta.pagination: {count, page, pages}
+    links: {first, last, next, prev}
+sorting:
+  param: sort
+  syntax: comma-separated field names; prefix with - for descending (e.g. sort=-created_at,city)
+filtering:
+  syntax: filter[field]=value (repeatable; e.g. filter[enabled]=true&filter[owner]=123)
+  examples:
+    filter[email]: exact case-insensitive user lookup on list users
+idempotency:
+  request_idempotency_key: false
+  note: >-
+    The API documents NO request-level Idempotency-Key header. Idempotency is
+    addressed on the consumer side of webhooks: deliveries reuse the same
+    webhook-id (equal to data.id) on retries, and handlers must dedupe on that
+    ULID and treat repeats as no-ops.
+rate_limiting:
+  scope: per OAuth2 application (global bucket) plus optional stricter per-endpoint limits
+  response_headers: [X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset]
+  exceeded: HTTP 429 with Retry-After header (seconds)
+  see: https://developers.beyondpricing.com/guides/rate-limiting/
+request_tracing:
+  note: Not documented as a request-id header on the public API surface.
+versioning:
+  style: uri-path
+  current: v1
+  see: lifecycle/beyond-pricing-lifecycle.yml
+error_envelope:
+  standard: JSON:API errors[]
+  fields: [status, title, detail, source.pointer]
+  see: errors/beyond-pricing-problem-types.yml
+webhooks:
+  signing: Standard Webhooks (HMAC-SHA256)
+  see: asyncapi/beyond-pricing-webhooks.yml

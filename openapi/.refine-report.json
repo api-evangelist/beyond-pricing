@@ -1,0 +1,26 @@
+{
+  "provider": "beyond-pricing",
+  "sources": [
+    "beyond-pricing-accounts-api-openapi.yml",
+    "beyond-pricing-compsets-api-openapi.yml",
+    "beyond-pricing-customizations-api-openapi.yml",
+    "beyond-pricing-insights-api-openapi.yml",
+    "beyond-pricing-listings-api-openapi.yml",
+    "beyond-pricing-oauth2-api-openapi.yml",
+    "beyond-pricing-users-api-openapi.yml"
+  ],
+  "outputs": [
+    "beyond-pricing-accounts-api-openapi.yml",
+    "beyond-pricing-compsets-api-openapi.yml",
+    "beyond-pricing-customizations-api-openapi.yml",
+    "beyond-pricing-insights-api-openapi.yml",
+    "beyond-pricing-listings-api-openapi.yml",
+    "beyond-pricing-oauth2-api-openapi.yml",
+    "beyond-pricing-users-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [],
+  "skipped": []
+}

@@ -1,0 +1,55 @@
+generated: '2026-07-18'
+method: derived
+source: openapi/beyond-pricing-openapi-original.yml
+docs: https://developers.beyondpricing.com/guides/error-handling/
+format: jsonapi
+envelope: >-
+  All error responses follow the JSON:API error format: a top-level `errors[]`
+  array; each member carries `status` (HTTP code as a string), `title`
+  (human-readable summary), `detail` (specific description), and a `source`
+  object with a `pointer` (e.g. /data/attributes/email) or `parameter`.
+  Content type application/vnd.api+json. Beyond does not use RFC 9457
+  application/problem+json.
+problems:
+- status: 400
+  title: Bad Request
+  detail: Invalid request — missing or invalid parameters, or a validation error on the request body.
+  operations: 11
+- status: 401
+  title: Unauthorized
+  detail: Invalid or missing bearer token, or invalid client credentials at the token endpoint.
+  operations: 31
+- status: 403
+  title: Forbidden
+  detail: The token is valid but lacks the required scope or permission for the resource.
+  operations: 30
+- status: 404
+  title: Not Found
+  detail: The requested resource does not exist or is not visible to the token.
+  operations: 26
+- status: 409
+  title: Conflict
+  detail: >-
+    The request conflicts with current state — e.g. a user with this email
+    already exists, or a refresh is already in progress for the account.
+  operations: 2
+- status: 422
+  title: Unprocessable Entity
+  detail: >-
+    The request was well-formed but cannot be processed — e.g. invalid dates,
+    insufficient or not enough market data to compute a result.
+  operations: 9
+- status: 429
+  title: Too Many Requests
+  detail: >-
+    Rate limit exceeded. Response includes Retry-After and X-RateLimit-*
+    headers; honor Retry-After and back off exponentially.
+  operations: 30
+- status: 500
+  title: Internal Server Error
+  detail: An unexpected error occurred on the Beyond side.
+  operations: 30
+- status: 502
+  title: Bad Gateway
+  detail: Channel error — an upstream channel (PMS / OTA) returned an error.
+  operations: 1

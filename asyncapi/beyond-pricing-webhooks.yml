@@ -1,0 +1,44 @@
+generated: '2026-07-18'
+method: searched
+source: https://developers.beyondpricing.com/webhooks/
+spec_type: Webhooks
+note: >-
+  Beyond documents a webhook surface but publishes no AsyncAPI document, so this
+  is the captured webhook catalog (type: Webhooks), not a verbatim AsyncAPI spec.
+availability: Partners only (configured at the OAuth2 application level); personal-user webhooks planned.
+delivery:
+  transport: HTTP POST to a registered endpoint
+  body: JSON:API document (application/vnd.api+json)
+  signing: Standard Webhooks (HMAC-SHA256) — https://www.standardwebhooks.com/
+  idempotency: reuse the same webhook-id (== data.id ULID) on retries; dedupe and treat repeats as no-ops
+envelope:
+  meta.type: event type (routing key, e.g. listing.refreshed)
+  meta.sent-at: RFC 3339 UTC timestamp the envelope was assembled
+  data.type: JSON:API resource type (dasherized-plural, e.g. listing-refreshed-events)
+  data.id: event ULID (same as webhook-id header; NOT a domain object id)
+  note: Events are thin — data.attributes carries facts; the domain object appears only as a relationship {type,id} + links.related.
+events:
+- name: Account Created
+  type: account.created
+  resource_type: account-created-events
+  fires_when: The background listing sync following adding a managed account finishes (success or failure).
+- name: Account Refreshed
+  type: account.refreshed
+  resource_type: account-refreshed-events
+  fires_when: The background listing sync started by refreshing a managed account finishes.
+- name: Listing Created
+  type: listing.created
+  resource_type: listing-created-events
+  fires_when: A new listing owned by one of your users is fully set up (its initial base price is computed).
+- name: Listing In Active Market Changed
+  type: listing.in_active_market_changed
+  resource_type: listing-in-active-market-changed-events
+  fires_when: A listing's in-active-market attribute changes (leaves or re-enters the state where its calendar is guaranteed to work).
+- name: Listing Refreshed
+  type: listing.refreshed
+  resource_type: listing-refreshed-events
+  fires_when: A partner-triggered listing refresh chain finishes (success or failure).
+- name: Listing Base Price Changed
+  type: listing.base_price_changed
+  resource_type: listing-base-price-changed-events
+  fires_when: A listing's effective base price or currency changes on any Beyond surface (enabled marks live vs speculative).

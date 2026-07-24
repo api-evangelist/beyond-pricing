@@ -1,0 +1,12 @@
+generated: '2026-07-18'
+method: generated
+source: openapi/beyond-pricing-openapi-original.yml
+skills:
+- file: beyond-pricing-onboard-managed-account.md
+  name: Onboard a Beyond user and connect a managed account
+  api: openapi/beyond-pricing-openapi-original.yml
+  operations: [create_user, create_account, refresh_account, list_listings]
+- file: beyond-pricing-tune-listing-pricing.md
+  name: Tune a listing's dynamic pricing
+  api: openapi/beyond-pricing-openapi-original.yml
+  operations: [get_listing, list_listing_calendar, get_listing_base_price_customization, patch_listing_base_price_customization, patch_listing_min_max_prices_customization]

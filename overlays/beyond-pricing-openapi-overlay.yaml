@@ -1,0 +1,18 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for Beyond Pricing Public API
+  version: 1.0.0
+extends: openapi/beyond-pricing-openapi-original.yml
+actions:
+- target: $.info
+  update:
+    x-apievangelist-provider: beyond-pricing
+    x-apievangelist-data-format: JSON:API v1.1
+    x-apievangelist-auth: [oauth2-client-credentials, personal-access-token]
+    x-apievangelist-conventions: conventions/beyond-pricing-conventions.yml
+    x-apievangelist-errors: errors/beyond-pricing-problem-types.yml
+    x-apievangelist-webhooks: asyncapi/beyond-pricing-webhooks.yml
+- target: $.servers
+  update:
+  - url: https://developers.beyondpricing.com
+    description: Beyond Partners API host (paths under /api/v1/); token endpoint at /o/token/

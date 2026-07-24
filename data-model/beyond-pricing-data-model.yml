@@ -1,0 +1,60 @@
+generated: '2026-07-18'
+method: derived
+source: openapi/beyond-pricing-openapi-original.yml
+notes: >-
+  Entity graph derived from OpenAPI path hierarchy and JSON:API relationships
+  (data.relationships target types) in openapi/beyond-pricing-openapi-original.yml.
+  Resource types use JSON:API dasherized-plural naming (users, listings,
+  compsets). Ids are opaque strings.
+entities:
+- name: user
+  resource_type: users
+  description: A Beyond user (end customer) that a partner integration manages; owns listings and managed accounts.
+  relationships:
+  - {kind: has_many, target: account, via: accounts}
+  - {kind: has_many, target: credential, via: credentials}
+  - {kind: has_many, target: listing, via: owner}
+- name: credential
+  resource_type: credentials
+  description: A Beyond login belonging to a user; a token can be narrowed to one credential via credential_id.
+  relationships:
+  - {kind: belongs_to, target: user, via: user}
+- name: account
+  resource_type: accounts
+  description: A managed channel account (PMS, Airbnb, etc.) connected under a user.
+  relationships:
+  - {kind: belongs_to, target: user, via: user}
+- name: listing
+  resource_type: listings
+  description: A short-term rental property listing with dynamic pricing.
+  relationships:
+  - {kind: belongs_to, target: user, via: owner}
+  - {kind: has_one, target: calendar, via: calendar}
+  - {kind: has_many, target: customization, via: customizations}
+  - {kind: has_many, target: recommendation, via: recommendations}
+- name: calendar
+  resource_type: listing-calendar
+  description: Per-date availability and modeled pricing for a listing (pricing factors, effective min/max prices).
+  relationships:
+  - {kind: belongs_to, target: listing, via: listing}
+- name: customization
+  resource_type: listing-customizations
+  description: Listing pricing customizations — base price, min/max prices, min stays, extra-guest fees, time-based adjustments.
+  relationships:
+  - {kind: belongs_to, target: listing, via: listing}
+- name: recommendation
+  resource_type: listing-recommendations
+  description: Pricing recommendations generated for a listing.
+  relationships:
+  - {kind: belongs_to, target: listing, via: listing}
+- name: compset
+  resource_type: compsets
+  description: A competitive set of comparable listings used for market benchmarking.
+  relationships:
+  - {kind: belongs_to, target: user, via: owner}
+  - {kind: belongs_to, target: listing, via: listing}
+- name: market-insight
+  resource_type: market-insights
+  description: Market intelligence (demand, pacing) scoped to a user.
+  relationships:
+  - {kind: belongs_to, target: user, via: user}
