@@ -2,15 +2,12 @@ generated: '2026-07-18'
 method: searched
 status: candidate
 source: https://www.beyondpricing.com/products/str-developers
-notes: >-
-  Beyond markets an official MCP (Model Context Protocol) server in beta on its
-  developer page ("Access Beyond's API & MCP" / "authenticate your MCP access",
-  integrating with Claude and ChatGPT for real-time revenue intelligence), but
-  as of 2026-07-18 no public MCP endpoint URL, transport, or tool manifest is
-  documented on developers.beyondpricing.com and /.well-known/mcp.json returns
-  404. The tools below are a candidate surface DERIVED one-per-operation from
-  the OpenAPI (openapi/beyond-pricing-openapi-original.yml), not the provider's
-  published beta tool list.
+notes: Beyond markets an official MCP (Model Context Protocol) server in beta on its developer page ("Access
+  Beyond's API & MCP" / "authenticate your MCP access", integrating with Claude and ChatGPT for real-time
+  revenue intelligence), but as of 2026-07-18 no public MCP endpoint URL, transport, or tool manifest
+  is documented on developers.beyondpricing.com and /.well-known/mcp.json returns 404. The tools below
+  are a candidate surface DERIVED one-per-operation from the OpenAPI (openapi/beyond-pricing-openapi-original.yml),
+  not the provider's published beta tool list.
 server:
   name: beyond-pricing
   official_beta: true
@@ -78,3 +75,9 @@ tools:
 - name: get_market_insights
   description: Get market insights for a user
   source_operation: openapi/beyond-pricing-openapi-original.yml#get_market_insights
+deployment:
+  mode: none
+  verified: derived
+  tools: 20
+  checked: '2026-08-12'
+  source: catalog MCP census
