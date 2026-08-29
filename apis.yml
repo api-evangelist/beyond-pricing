@@ -200,6 +200,16 @@ apis:
     url: https://developers.beyondpricing.com/getting-started/
   - type: Authentication
     url: https://developers.beyondpricing.com/getting-started/authentication/
+- aid: beyond-pricing:beyond-pricing-webhooks-api
+  name: Beyond Pricing Webhooks API
+  description: The Webhooks API from Beyond Pricing — 0 operation(s) for webhooks.
+  humanURL: https://developers.beyondpricing.com/
+  baseURL: https://developers.beyondpricing.com/api/v1
+  tags:
+  - Webhooks
+  properties:
+  - type: OpenAPI
+    url: openapi/beyond-pricing-webhooks-api-openapi.yml
 common:
 - type: AgenticAccess
   url: agentic-access/beyond-pricing-agentic-access.yml

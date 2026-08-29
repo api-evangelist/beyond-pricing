@@ -1,13 +1,7 @@
 {
   "provider": "beyond-pricing",
   "sources": [
-    "beyond-pricing-accounts-api-openapi.yml",
-    "beyond-pricing-compsets-api-openapi.yml",
-    "beyond-pricing-customizations-api-openapi.yml",
-    "beyond-pricing-insights-api-openapi.yml",
-    "beyond-pricing-listings-api-openapi.yml",
-    "beyond-pricing-oauth2-api-openapi.yml",
-    "beyond-pricing-users-api-openapi.yml"
+    "_original/beyond-pricing-openapi-original.yml"
   ],
   "outputs": [
     "beyond-pricing-accounts-api-openapi.yml",
@@ -16,11 +10,31 @@
     "beyond-pricing-insights-api-openapi.yml",
     "beyond-pricing-listings-api-openapi.yml",
     "beyond-pricing-oauth2-api-openapi.yml",
-    "beyond-pricing-users-api-openapi.yml"
+    "beyond-pricing-users-api-openapi.yml",
+    "beyond-pricing-webhooks-api-openapi.yml"
   ],
   "archived": [],
   "errors": [],
   "warnings": [],
-  "notes": [],
-  "skipped": []
+  "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "beyond-pricing-openapi-original.yml: upgraded openapi 3.1.1 -> OpenAPI 3.2.0",
+    "beyond-pricing-openapi-original.yml: declared missing tag: Accounts",
+    "beyond-pricing-openapi-original.yml: declared missing tag: Compsets",
+    "beyond-pricing-openapi-original.yml: declared missing tag: Customizations",
+    "beyond-pricing-openapi-original.yml: declared missing tag: Insights",
+    "beyond-pricing-openapi-original.yml: declared missing tag: Listings",
+    "beyond-pricing-openapi-original.yml: declared missing tag: OAuth2",
+    "beyond-pricing-openapi-original.yml: declared missing tag: Users",
+    "beyond-pricing-openapi-original.yml: declared missing tag: Webhooks"
+  ],
+  "skipped": [
+    "beyond-pricing-accounts-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "beyond-pricing-compsets-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "beyond-pricing-customizations-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "beyond-pricing-insights-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "beyond-pricing-listings-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "beyond-pricing-oauth2-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "beyond-pricing-users-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
 }
