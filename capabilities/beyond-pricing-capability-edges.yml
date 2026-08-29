@@ -1,0 +1,36 @@
+slug: beyond-pricing
+provider: Beyond Pricing
+generated_by: planning/capability-mapping/scripts/classify_capabilities.py
+model: claude-opus-5
+frame:
+- Travel & Hospitality
+min_confidence: 0.7
+capability_model:
+  source: https://github.com/vincentmakes/turbo-ea-capabilities
+  license: CC-BY-4.0
+  attribution: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities,
+    CC BY 4.0
+  notice: NOTICE
+edge_count: 2
+edges:
+- tag: Compsets
+  spec_file: beyond-pricing-compsets-api-openapi.yml
+  capability_id: BC-4030.40
+  capability_id_l1: BC-4030
+  capability_name: Competitive Rate Intelligence
+  confidence: 0.85
+  evidence: 'GET /api/v1/compsets/  list_compsets  List comp sets; schemas: CompsetPerformanceListingMetrics,
+    CompsetMemberMetrics, CompsetSourceMetrics'
+  reason: Competitive sets with per-member and aggregate performance metrics on a short-term-rental revenue
+    management platform are exactly competitive rate shopping / market positioning intelligence.
+- tag: Customizations
+  spec_file: beyond-pricing-customizations-api-openapi.yml
+  capability_id: BC-4030.20
+  capability_id_l1: BC-4030
+  capability_name: Pricing & Rate Strategy Management
+  confidence: 0.8
+  evidence: 'PATCH /api/v1/listings/{listing_id}/customizations/base-price/; .../min-max-prices/; .../min-stays/;
+    .../time-based-adjustments/; schemas: SeasonalPricesRequest, DayOfWeekMinPriceRequest'
+  reason: These operations set base price, min/max price floors and ceilings, seasonal and day-of-week
+    price adjustments and minimum-stay rules that steer the dynamic pricing engine — rate strategy definition
+    and adjustment for lodging products.

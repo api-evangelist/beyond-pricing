@@ -211,6 +211,9 @@ apis:
   - type: OpenAPI
     url: openapi/beyond-pricing-webhooks-api-openapi.yml
 common:
+- type: CapabilityMap
+  url: capabilities/beyond-pricing-capability-edges.yml
+  name: Beyond Pricing Business Capability Map
 - type: AgenticAccess
   url: agentic-access/beyond-pricing-agentic-access.yml
 - type: WellKnown
