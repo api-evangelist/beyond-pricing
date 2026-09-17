@@ -160,26 +160,6 @@ apis:
     url: https://developers.beyondpricing.com/getting-started/
   - type: Authentication
     url: https://developers.beyondpricing.com/getting-started/authentication/
-- aid: beyond-pricing:beyond-pricing-oauth2-api
-  name: Beyond Pricing OAuth2 API
-  description: The OAuth2 API from Beyond Pricing — 1 operation(s) for oauth2.
-  humanURL: https://developers.beyondpricing.com/
-  baseURL: https://developers.beyondpricing.com/api/v1
-  tags:
-  - Authentication
-  tags_raw:
-  - OAuth2
-  properties:
-  - type: OpenAPI
-    url: openapi/beyond-pricing-oauth2-api-openapi.yml
-  - type: Documentation
-    url: https://developers.beyondpricing.com/
-  - type: APIReference
-    url: https://developers.beyondpricing.com/api/v1/docs/
-  - type: GettingStarted
-    url: https://developers.beyondpricing.com/getting-started/
-  - type: Authentication
-    url: https://developers.beyondpricing.com/getting-started/authentication/
 - aid: beyond-pricing:beyond-pricing-users-api
   name: Beyond Pricing Users API
   description: The Users API from Beyond Pricing — 3 operation(s) for users.
@@ -212,6 +192,24 @@ apis:
   properties:
   - type: OpenAPI
     url: openapi/beyond-pricing-webhooks-api-openapi.yml
+- aid: beyond-pricing:beyond-pricing-oauth2-api
+  name: Beyond Pricing O Auth2 API
+  description: The OAuth2 API from Beyond Pricing — 1 operation(s) for oauth2.
+  humanURL: https://developers.beyondpricing.com/
+  baseURL: https://developers.beyondpricing.com/api/v1
+  tags:
+  - OAuth2
+  properties:
+  - type: OpenAPI
+    url: openapi/beyond-pricing-oauth2-api-openapi.yml
+  - type: Documentation
+    url: https://developers.beyondpricing.com/
+  - type: APIReference
+    url: https://developers.beyondpricing.com/api/v1/docs/
+  - type: GettingStarted
+    url: https://developers.beyondpricing.com/getting-started/
+  - type: Authentication
+    url: https://developers.beyondpricing.com/getting-started/authentication/
 common:
 - type: CapabilityMap
   url: capabilities/beyond-pricing-capability-edges.yml
