@@ -53,6 +53,17 @@ modified: '2026-07-18'
 image: https://www.beyondpricing.com/favicon.ico
 tags:
 - Company
+- Short-Term Rental
+- Vacation Rentals
+- Revenue Management
+- Dynamic Pricing
+- Hospitality
+- Property Management
+- Travel
+- Pricing
+- JSON:API
+tags_raw:
+- Company
 - Short-Term Rentals
 - Vacation Rentals
 - Revenue Management
@@ -198,6 +209,8 @@ apis:
   humanURL: https://developers.beyondpricing.com/
   baseURL: https://developers.beyondpricing.com/api/v1
   tags:
+  - Authentication
+  tags_raw:
   - OAuth2
   properties:
   - type: OpenAPI
