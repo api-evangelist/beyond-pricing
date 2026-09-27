@@ -233,6 +233,201 @@ paths:
           description: Internal server error
 components:
   schemas:
+    CompsetPerformance:
+      type: object
+      description: Date-ranged comparison of the base listing vs. the compset benchmark.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First stay date in the range.
+        end-date:
+          type: string
+          format: date
+          description: Last stay date in the range.
+        currency:
+          type: string
+          description: ISO currency code for the figures.
+        main-listing-metrics:
+          oneOf:
+          - $ref: '#/components/schemas/CompsetPerformanceListingMetrics'
+          - type: 'null'
+          description: The base listing's metrics over the range. `null` for `custom` comp sets, which have no Beyond listing.
+        aggregated-metrics:
+          $ref: '#/components/schemas/CompsetPerformanceAggregateMetrics'
+      required:
+      - aggregated-metrics
+      - currency
+      - end-date
+      - start-date
+    CompsetSource:
+      type: object
+      description: The base listing the comp set was built around.
+      properties:
+        bedrooms:
+          type:
+          - integer
+          - 'null'
+        bathrooms:
+          type:
+          - number
+          - 'null'
+          format: double
+        latitude:
+          type:
+          - number
+          - 'null'
+          format: double
+        longitude:
+          type:
+          - number
+          - 'null'
+          format: double
+        address:
+          type:
+          - string
+          - 'null'
+        city:
+          type:
+          - string
+          - 'null'
+        state:
+          type:
+          - string
+          - 'null'
+        country:
+          type:
+          - string
+          - 'null'
+        market:
+          type:
+          - string
+          - 'null'
+        currency:
+          type:
+          - string
+          - 'null'
+          description: ISO currency code for the base listing.
+        base-price:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Average base price over the next 365 days.
+        health-score:
+          type:
+          - integer
+          - 'null'
+        min-stay:
+          type:
+          - integer
+          - 'null'
+        metrics:
+          $ref: '#/components/schemas/CompsetSourceMetrics'
+      required:
+      - metrics
+    CompsetMemberMetrics:
+      type: object
+      description: Metrics for a single comp-set member over the next 30 and 90 days.
+      properties:
+        thirty-day-adr:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Average booked rate (ADR), next 30 days.
+        ninety-day-adr:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Average booked rate (ADR), next 90 days.
+        thirty-day-booked:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Occupancy percentage, next 30 days.
+        ninety-day-booked:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Occupancy percentage, next 90 days.
+        thirty-day-availability:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Availability percentage, next 30 days.
+        ninety-day-availability:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Availability percentage, next 90 days.
+        thirty-day-min-stays:
+          type:
+          - integer
+          - 'null'
+          description: Minimum stay, next 30 days.
+        ninety-day-min-stays:
+          type:
+          - integer
+          - 'null'
+          description: Minimum stay, next 90 days.
+        thirty-day-adj-occupancy:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Adjusted occupancy percentage, next 30 days.
+        ninety-day-adj-occupancy:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Adjusted occupancy percentage, next 90 days.
+        thirty-day-booked-rate:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Booked rate, next 30 days.
+        ninety-day-booked-rate:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Booked rate, next 90 days.
+        base-price:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Average base price over the next 365 days.
+        currency:
+          type:
+          - string
+          - 'null'
+          description: ISO currency code for the member's prices.
+        rating:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Aggregate guest star rating.
+        reviews-count:
+          type:
+          - integer
+          - 'null'
+          description: Number of guest reviews.
+        average-service-fee:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Average service fee (Airbnb-only; null on other channels).
     CompsetPerformanceListingMetrics:
       type: object
       description: The base listing's metrics over the requested date range.
@@ -267,10 +462,6 @@ components:
           - 'null'
           format: double
           description: Adjusted occupancy percentage over the range.
-    TypeF0bEnum:
-      type: string
-      enum:
-      - compsets
     CompsetSourceMetrics:
       type: object
       description: Headline metrics for the base listing over the next 30 and 90 days.
@@ -418,6 +609,13 @@ components:
           - source
           - members
           - performance
+    CompsetResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Compset'
+      required:
+      - data
     CompsetSummary:
       type: object
       required:
@@ -512,33 +710,6 @@ components:
               description: The identifier of the related object.
               title: Listing
               readOnly: true
-    CompsetPerformance:
-      type: object
-      description: Date-ranged comparison of the base listing vs. the compset benchmark.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First stay date in the range.
-        end-date:
-          type: string
-          format: date
-          description: Last stay date in the range.
-        currency:
-          type: string
-          description: ISO currency code for the figures.
-        main-listing-metrics:
-          oneOf:
-          - $ref: '#/components/schemas/CompsetPerformanceListingMetrics'
-          - type: 'null'
-          description: The base listing's metrics over the range. `null` for `custom` comp sets, which have no Beyond listing.
-        aggregated-metrics:
-          $ref: '#/components/schemas/CompsetPerformanceAggregateMetrics'
-      required:
-      - aggregated-metrics
-      - currency
-      - end-date
-      - start-date
     CompsetPerformanceAggregateMetrics:
       type: object
       description: The aggregated compset benchmark over the requested date range.
@@ -645,6 +816,10 @@ components:
           additionalProperties: false
       required:
       - data
+    TypeF0bEnum:
+      type: string
+      enum:
+      - compsets
     CompsetMember:
       type: object
       description: One curated member of the comp set.
@@ -720,181 +895,6 @@ components:
       - channel
       - channel-listing-id
       - metrics
-    CompsetMemberMetrics:
-      type: object
-      description: Metrics for a single comp-set member over the next 30 and 90 days.
-      properties:
-        thirty-day-adr:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Average booked rate (ADR), next 30 days.
-        ninety-day-adr:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Average booked rate (ADR), next 90 days.
-        thirty-day-booked:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Occupancy percentage, next 30 days.
-        ninety-day-booked:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Occupancy percentage, next 90 days.
-        thirty-day-availability:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Availability percentage, next 30 days.
-        ninety-day-availability:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Availability percentage, next 90 days.
-        thirty-day-min-stays:
-          type:
-          - integer
-          - 'null'
-          description: Minimum stay, next 30 days.
-        ninety-day-min-stays:
-          type:
-          - integer
-          - 'null'
-          description: Minimum stay, next 90 days.
-        thirty-day-adj-occupancy:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Adjusted occupancy percentage, next 30 days.
-        ninety-day-adj-occupancy:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Adjusted occupancy percentage, next 90 days.
-        thirty-day-booked-rate:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Booked rate, next 30 days.
-        ninety-day-booked-rate:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Booked rate, next 90 days.
-        base-price:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Average base price over the next 365 days.
-        currency:
-          type:
-          - string
-          - 'null'
-          description: ISO currency code for the member's prices.
-        rating:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Aggregate guest star rating.
-        reviews-count:
-          type:
-          - integer
-          - 'null'
-          description: Number of guest reviews.
-        average-service-fee:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Average service fee (Airbnb-only; null on other channels).
-    CompsetSource:
-      type: object
-      description: The base listing the comp set was built around.
-      properties:
-        bedrooms:
-          type:
-          - integer
-          - 'null'
-        bathrooms:
-          type:
-          - number
-          - 'null'
-          format: double
-        latitude:
-          type:
-          - number
-          - 'null'
-          format: double
-        longitude:
-          type:
-          - number
-          - 'null'
-          format: double
-        address:
-          type:
-          - string
-          - 'null'
-        city:
-          type:
-          - string
-          - 'null'
-        state:
-          type:
-          - string
-          - 'null'
-        country:
-          type:
-          - string
-          - 'null'
-        market:
-          type:
-          - string
-          - 'null'
-        currency:
-          type:
-          - string
-          - 'null'
-          description: ISO currency code for the base listing.
-        base-price:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Average base price over the next 365 days.
-        health-score:
-          type:
-          - integer
-          - 'null'
-        min-stay:
-          type:
-          - integer
-          - 'null'
-        metrics:
-          $ref: '#/components/schemas/CompsetSourceMetrics'
-      required:
-      - metrics
-    CompsetResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/Compset'
-      required:
-      - data
   securitySchemes:
     oauth2:
       type: oauth2

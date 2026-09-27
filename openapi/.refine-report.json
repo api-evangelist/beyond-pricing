@@ -13,9 +13,7 @@
     "beyond-pricing-users-api-openapi.yml",
     "beyond-pricing-webhooks-api-openapi.yml"
   ],
-  "archived": [
-    "deleted 1 superseded output(s) from the previous generation"
-  ],
+  "archived": [],
   "errors": [],
   "warnings": [],
   "notes": [
@@ -29,8 +27,7 @@
     "beyond-pricing-openapi-original.yml: declared missing tag: OAuth2",
     "beyond-pricing-openapi-original.yml: declared missing tag: Users",
     "beyond-pricing-openapi-original.yml: declared missing tag: Webhooks",
-    "superseded outputs removed: beyond-pricing-o-auth2-api-openapi.yml",
-    "apis.yml register: written (+1 apis, 8 total)"
+    "apis.yml register: already-registered"
   ],
   "skipped": [
     "beyond-pricing-accounts-api-openapi.yml: previously refined output, superseded by openapi/_original/",
@@ -38,7 +35,7 @@
     "beyond-pricing-customizations-api-openapi.yml: previously refined output, superseded by openapi/_original/",
     "beyond-pricing-insights-api-openapi.yml: previously refined output, superseded by openapi/_original/",
     "beyond-pricing-listings-api-openapi.yml: previously refined output, superseded by openapi/_original/",
-    "beyond-pricing-o-auth2-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "beyond-pricing-oauth2-api-openapi.yml: previously refined output, superseded by openapi/_original/",
     "beyond-pricing-users-api-openapi.yml: previously refined output, superseded by openapi/_original/",
     "beyond-pricing-webhooks-api-openapi.yml: previously refined output, superseded by openapi/_original/"
   ]
