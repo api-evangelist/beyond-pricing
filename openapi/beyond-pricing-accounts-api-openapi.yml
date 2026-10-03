@@ -465,37 +465,61 @@ paths:
           description: Internal server error
 components:
   schemas:
-    AccountSyncStatus:
+    StateEnum:
+      enum:
+      - queued
+      - in_progress
+      - completed
+      - unknown
+      type: string
+      description: '* `queued` - queued
+
+        * `in_progress` - in_progress
+
+        * `completed` - completed
+
+        * `unknown` - unknown'
+    AccountResourceTypeEnum:
+      type: string
+      enum:
+      - accounts
+    AccountCreateRequest:
       type: object
-      description: 'Serializer for the account sync status.
-
-
-        Receives the full ManagedAccount instance via ``source="*"`` and derives
-
-        the sync state from the pending sync job and ``listings_synced_at``.'
       properties:
-        state:
-          allOf:
-          - $ref: '#/components/schemas/StateEnum'
-          description: 'Current sync state: queued, in_progress, completed, or unknown
-
-
-            * `queued` - queued
-
-            * `in_progress` - in_progress
-
-            * `completed` - completed
-
-            * `unknown` - unknown'
-        last-successful-sync-at:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: Timestamp of the last successful listing sync, or null if never synced
+        data:
+          type: object
+          required:
+          - type
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+              enum:
+              - accounts
+            attributes:
+              type: object
+              properties:
+                channel:
+                  type: string
+                  minLength: 1
+                  description: 'Channel identifier (e.g., ''hostify'', ''hostaway''). Supported channels: airbnb, airbnb_partner, avantio, barefoot_direct, beds24, best_beach, booking_connect, booking_experts, bookingsync, brightside, ciirus, cloudbeds, direct, elina, escapia, fake, fake_2, fake_pms, fantasticstay, gfh, guesty, homeaway, homhero, homhero_staging, hospitable, hostaway, hostfully, hosthub, hostify, icnea, igms, ipro, janiis, kigo, kigo_pro, kross_booking, lightmaker, liverez, lodgable, lodgify, lodgify_partner, lodgix, loggia, mews, myvr, octorate, opera, ownerrez, real_time_rental, rentalready, rentals_united, resly, rms, secra, septeo, smoobu, stays, streamline, supercontrol, tokeet, track, travelmob, uplisting, villas365, vrbo, vreasy, vrm, zeevou, zeevou_direct'
+                credentials:
+                  type: object
+                  additionalProperties: {}
+                  description: Credentials for the specified channel
+              required:
+              - channel
+              - credentials
       required:
-      - last-successful-sync-at
-      - state
+      - data
+    AccountResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Account'
+      required:
+      - data
     PaginatedAccountList:
       type: object
       properties:
@@ -563,50 +587,6 @@ components:
           additionalProperties: false
       required:
       - data
-    AccountCreateRequest:
-      type: object
-      properties:
-        data:
-          type: object
-          required:
-          - type
-          additionalProperties: false
-          properties:
-            type:
-              type: string
-              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
-              enum:
-              - accounts
-            attributes:
-              type: object
-              properties:
-                channel:
-                  type: string
-                  minLength: 1
-                  description: 'Channel identifier (e.g., ''hostify'', ''hostaway''). Supported channels: airbnb, airbnb_partner, avantio, barefoot_direct, beds24, best_beach, booking_connect, booking_experts, bookingsync, brightside, ciirus, cloudbeds, direct, elina, escapia, fake, fake_2, fake_pms, fantasticstay, gfh, guesty, homeaway, homhero, homhero_staging, hospitable, hostaway, hostfully, hosthub, hostify, icnea, igms, ipro, janiis, kigo, kigo_pro, kross_booking, lightmaker, liverez, lodgable, lodgify, lodgify_partner, lodgix, loggia, mews, myvr, octorate, opera, ownerrez, real_time_rental, rentalready, rentals_united, resly, rms, secra, septeo, smoobu, stays, streamline, supercontrol, tokeet, track, travelmob, uplisting, villas365, vrbo, vreasy, vrm, zeevou, zeevou_direct'
-                credentials:
-                  type: object
-                  additionalProperties: {}
-                  description: Credentials for the specified channel
-              required:
-              - channel
-              - credentials
-      required:
-      - data
-    StateEnum:
-      enum:
-      - queued
-      - in_progress
-      - completed
-      - unknown
-      type: string
-      description: '* `queued` - queued
-
-        * `in_progress` - in_progress
-
-        * `completed` - completed
-
-        * `unknown` - unknown'
     Account:
       type: object
       required:
@@ -673,17 +653,37 @@ components:
           - label
           - email
           - valid
-    AccountResponse:
+    AccountSyncStatus:
       type: object
+      description: 'Serializer for the account sync status.
+
+
+        Receives the full ManagedAccount instance via ``source="*"`` and derives
+
+        the sync state from the pending sync job and ``listings_synced_at``.'
       properties:
-        data:
-          $ref: '#/components/schemas/Account'
+        state:
+          allOf:
+          - $ref: '#/components/schemas/StateEnum'
+          description: 'Current sync state: queued, in_progress, completed, or unknown
+
+
+            * `queued` - queued
+
+            * `in_progress` - in_progress
+
+            * `completed` - completed
+
+            * `unknown` - unknown'
+        last-successful-sync-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: Timestamp of the last successful listing sync, or null if never synced
       required:
-      - data
-    AccountResourceTypeEnum:
-      type: string
-      enum:
-      - accounts
+      - last-successful-sync-at
+      - state
   securitySchemes:
     oauth2:
       type: oauth2
