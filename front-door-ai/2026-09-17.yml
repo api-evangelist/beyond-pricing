@@ -7,14 +7,17 @@ front_door_ai:
   probed_at: '2026-09-17'
   host: www.beyondpricing.com
   final_host: beyondpricing.com
-  ownership: inherited
+  ownership: own
   owner: beyond-pricing
   shares_host_with: null
-  inherited_from: beyondpricing.com
+  inherited_from: null
+  alias_of: beyondpricing.com
   verdict: scored
-  score: null
+  score: 14
+  band: 5
+  band_label: prominent
   host_score: 14
-  density: null
+  density: 7.4
   words: 1891
   tiers:
     agentic: 2
