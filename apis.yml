@@ -227,6 +227,12 @@ apis:
   - type: Authentication
     url: https://developers.beyondpricing.com/getting-started/authentication/
 common:
+- type: OpenAPI
+  url: openapi/_original/beyond-pricing-openapi-original.yml
+- type: Idempotency
+  url: conventions/beyond-pricing-conventions.yml
+- type: MCPServer
+  url: mcp/beyond-pricing-mcp.yml
 - url: https://beyondpricing.com/blog
   type: Blog
 - url: https://beyondpricing.com/blog/rss.xml
@@ -302,3 +308,5 @@ x-enrichment:
   note: backfilled from .gitignore signal + verified work evidence
 x-parent: beyond
 x-relationship: product
+x-aliases:
+- beyond
