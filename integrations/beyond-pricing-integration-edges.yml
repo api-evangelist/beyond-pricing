@@ -1,0 +1,23 @@
+generated: '2026-10-14'
+method: searched
+checked:
+- mews-com/integrations/mews-com-integration-edges.yml
+source:
+- mews-com/integrations/mews-com-integration-edges.yml
+edges:
+- partner_name: Mews (own)
+  partner: mews-com
+  partner_match: mirror
+  mirror_match: domain+name-among-holders
+  type: marketplace
+  relationship: platform-app
+  direction: third-party
+  channel: partner-built
+  marketplace: own
+  evidence: https://www.mews.com/en/products/marketplace/beyond-pricing
+  mirror_of: mews-com/integrations/mews-com-integration-edges.yml
+  apps:
+  - Beyond Pricing
+  listing_count: 1
+  detected: '2026-10-14'
+  detected_by: mirror-platform-listings.py
