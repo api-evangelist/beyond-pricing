@@ -1,0 +1,421 @@
+openapi: 3.2.0
+info:
+  title: Beyond Reservations API
+  version: 2.0.0
+  description: Bearer-protected API for third-party integrations. Supports OAuth2 client credentials and personal access tokens. Follows JSON:API specification.
+tags:
+- name: Reservations
+paths:
+  /api/v1/reservations/:
+    get:
+      operationId: list_reservations
+      description: 'List the reservations of your listings, ordered by check-in date.
+
+
+        **Required scope:** `reservations:read`
+
+
+        `filter[listing]` narrows the request to up to 100 listing ids; without
+
+        it, every listing the token can see is read. An id the token cannot see
+
+        returns no reservations. Each reservation''s
+
+        `listing` relationship is the listing it belongs to: a multi-unit
+
+        listing also returns its units'' reservations, each under the unit''s
+
+        own listing.
+
+
+        A reservation is returned when its stay overlaps the window: it checks
+
+        out on or after `filter[start-date]` (default: today, UTC) and checks in
+
+        on or before `filter[end-date]` (default: no limit). Every status is
+
+        returned unless `filter[status]` narrows it, so cancellations are
+
+        visible.
+
+
+        A listing connected through a PMS returns the reservations its PMS
+
+        reports, once each, even when the listing is also connected to the
+
+        channels the PMS distributes to.
+
+
+        `rental-amount` and `adr` are in major units of the reservation''s own
+
+        `currency`, with no conversion.
+
+
+        **Example:** `GET /api/v1/reservations/?filter[listing]=123,456&filter[start-date]=2026-11-01&filter[end-date]=2026-11-30&filter[status]=accepted`'
+      summary: List reservations
+      parameters:
+      - in: query
+        name: filter[listing]
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: filter[start-date]
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: filter[end-date]
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: filter[status]
+        schema:
+          type: array
+          items:
+            type:
+            - string
+            - 'null'
+            enum:
+            - accepted
+            - canceled
+            - unconfirmed
+        description: 'Multiple values may be separated by commas.
+
+
+          * `unconfirmed` - Unconfirmed
+
+          * `accepted` - Accepted
+
+          * `canceled` - Canceled'
+        explode: false
+        style: form
+      - name: page[number]
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page[size]
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: fields[reservations]
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - id
+            - reference
+            - channel
+            - channel-id
+            - status
+            - is-owner-stay
+            - booked-at
+            - canceled-at
+            - checkin-date
+            - checkout-date
+            - guests
+            - currency
+            - rental-amount
+            - adr
+            - listing
+        description: endpoint return only specific fields in the response on a per-type basis by including a fields[TYPE] query parameter.
+        explode: false
+      tags:
+      - Reservations
+      security:
+      - oauth2:
+        - reservations:read
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PaginatedReservationList'
+              examples:
+                Reservations:
+                  value:
+                    data:
+                    - data:
+                      - type: reservations
+                        id: '48213377'
+                        attributes:
+                          reference: HMQ4X2ZK8A
+                          channel: guesty
+                          channel-id: 64f1c0a9e2
+                          status: accepted
+                          is-owner-stay: false
+                          booked-at: '2026-09-02T14:31:07Z'
+                          canceled-at: null
+                          checkin-date: '2026-11-01'
+                          checkout-date: '2026-11-05'
+                          guests: 3
+                          currency: USD
+                          rental-amount: 820.0
+                          adr: 205.0
+                        relationships:
+                          listing:
+                            data:
+                              type: listings
+                              id: '123'
+                      meta:
+                        pagination:
+                          page: 1
+                          pages: 1
+                          count: 1
+                    links:
+                      first: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=1
+                      last: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=9
+                      prev: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=1
+                      next: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=3
+                    meta:
+                      pagination:
+                        count: 42
+                        page: 2
+                        pages: 5
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+components:
+  schemas:
+    ReservationResourceTypeEnum:
+      type: string
+      enum:
+      - reservations
+    PaginatedReservationList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reservation'
+        links:
+          type: object
+          description: Pagination links for the primary data. These keys MUST be used for pagination links; each MUST be omitted or `null` when that link is unavailable. Values follow JSON:API link rules (URI string, link object, or null). https://jsonapi.org/format/#fetching-pagination https://jsonapi.org/format/#document-links
+          properties:
+            first:
+              type:
+              - string
+              - 'null'
+              format: uri
+              example: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=1
+              description: 'The first page of data. A JSON:API link: URI string, link object, or null. See https://jsonapi.org/format/#document-links.'
+            last:
+              type:
+              - string
+              - 'null'
+              format: uri
+              example: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=9
+              description: 'The last page of data. A JSON:API link: URI string, link object, or null. See https://jsonapi.org/format/#document-links.'
+            prev:
+              type:
+              - string
+              - 'null'
+              format: uri
+              example: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=1
+              description: 'The previous page of data. A JSON:API link: URI string, link object, or null. See https://jsonapi.org/format/#document-links.'
+            next:
+              type:
+              - string
+              - 'null'
+              format: uri
+              example: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=3
+              description: 'The next page of data. A JSON:API link: URI string, link object, or null. See https://jsonapi.org/format/#document-links.'
+          additionalProperties: false
+        meta:
+          type: object
+          description: Non-standard meta-information. Page-number stacks often nest totals under `pagination`. JSON:API does not define these keys. Servers MAY add other `meta` members; this schema documents the usual djangorestframework-json-api shape only. https://jsonapi.org/format/#document-meta
+          properties:
+            pagination:
+              type: object
+              description: Typical page-number metadata from djangorestframework-json-api; not mandated by JSON:API.
+              properties:
+                count:
+                  type: integer
+                  minimum: 0
+                  example: 42
+                  description: Total number of resources across all pages.
+                page:
+                  type: integer
+                  minimum: 1
+                  example: 2
+                  description: Current page number (1-based).
+                pages:
+                  type: integer
+                  minimum: 0
+                  example: 5
+                  description: Total number of pages.
+              additionalProperties: false
+          additionalProperties: false
+      required:
+      - data
+    Reservation:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/ReservationResourceTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Reservation identifier.
+        attributes:
+          type: object
+          properties:
+            reference:
+              type:
+              - string
+              - 'null'
+              description: Confirmation code the host sees in their PMS or on the channel. `null` when the channel does not send one.
+            channel:
+              type: string
+              description: Integration the reservation was synced from, the same value as the listing's `channel-listings[].channel` (e.g. `airbnb_partner`, `guesty`).
+            channel-id:
+              type: string
+              description: The reservation's identifier on that channel or PMS.
+            status:
+              enum:
+              - unconfirmed
+              - accepted
+              - canceled
+              type: string
+              description: '`accepted` for a confirmed stay, `canceled` for a confirmed stay that was later canceled, `unconfirmed` for a pending request or inquiry.
+
+
+                * `unconfirmed` - unconfirmed
+
+                * `accepted` - accepted
+
+                * `canceled` - canceled'
+            is-owner-stay:
+              type:
+              - boolean
+              - 'null'
+              description: Whether the stay is an owner booking rather than a guest booking. `null` when the channel does not say.
+            booked-at:
+              type: string
+              format: date-time
+              description: When the reservation was accepted (UTC, ISO 8601).
+            canceled-at:
+              type:
+              - string
+              - 'null'
+              format: date-time
+              description: When the reservation was canceled (UTC, ISO 8601). `null` unless `status` is `canceled`, and also `null` when the channel does not send it.
+            checkin-date:
+              type: string
+              format: date
+              description: Arrival date (listing-local).
+            checkout-date:
+              type: string
+              format: date
+              description: Departure date (listing-local). The stay's last night is the day before.
+            guests:
+              type:
+              - integer
+              - 'null'
+              description: Number of guests. `null` when the channel does not send it.
+            currency:
+              type: string
+              description: 'ISO 4217 code of `rental-amount` and `adr`: the currency the reservation was booked in.'
+            rental-amount:
+              type:
+              - number
+              - 'null'
+              format: double
+              description: The stay's accommodation amount, the figure that compares with the nightly prices Beyond posts, in major units of `currency` (e.g. `820.5` is 820.50). `null` when the channel does not send it.
+            adr:
+              type: number
+              format: double
+              description: 'Average daily rate: `rental-amount` divided by the number of nights, in major units of `currency`. When `rental-amount` is `null`, Beyond derives it from the reservation''s other amounts.'
+          required:
+          - reference
+          - channel
+          - channel-id
+          - status
+          - is-owner-stay
+          - booked-at
+          - canceled-at
+          - checkin-date
+          - checkout-date
+          - guests
+          - currency
+          - rental-amount
+          - adr
+        relationships:
+          type: object
+          properties:
+            listing:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                      - listings
+                      title: Resource Type Name
+                      description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+                  required:
+                  - id
+                  - type
+              required:
+              - data
+              description: The identifier of the related object.
+              title: Listing
+              readOnly: true
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      description: Use OAuth2 client credentials to mint an application token, or add `user_id` and optional `credential_id` in the Authorize dialog to request a user- or credential-scoped token.
+      flows:
+        clientCredentials:
+          tokenUrl: /o/token/
+          refreshUrl: /o/token/
+          scopes:
+            listings:read: Read listings
+            listings:write: Modify listings
+            reservations:read: Read reservations
+            accounts:read: Read account information
+            user:read: Read user information
+            user:write: Create and modify users
+            insights:read: Read market insights
+            compsets:read: Read competitive set data
+            neyoba:ask: Ask Neyoba
+            beyond:read: Read listings, performance, and market data via the Beyond MCP server
+            beyond:write: Modify pricing and listing settings via the Beyond MCP server
+            beyond:skills: Load Beyond revenue-management skills via the Beyond MCP server
+            beyond:usage: Read tool-call history and usage via the Beyond MCP server
+            webhooks:read: Read delivered webhook events
+            webhooks:write: Modify webhook configuration
+    personalAccessToken:
+      type: http
+      scheme: bearer
+      bearerFormat: PersonalAccessToken
+      description: Paste a `bpat_...` personal access token. PATs use the same Bearer header as OAuth2 tokens and must still include the runtime-required scopes for each endpoint, even though OpenAPI cannot encode scopes for non-OAuth bearer schemes.

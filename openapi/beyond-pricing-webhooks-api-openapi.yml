@@ -1,11 +1,404 @@
 openapi: 3.2.0
 info:
-  title: Beyond Pricing Public Webhooks API
+  title: Beyond Webhooks API
   version: 2.0.0
   description: Bearer-protected API for third-party integrations. Supports OAuth2 client credentials and personal access tokens. Follows JSON:API specification.
 tags:
 - name: Webhooks
-paths: {}
+paths:
+  /api/v1/webhook-configuration/:
+    get:
+      operationId: get_webhook_configuration
+      description: 'Retrieve where your webhooks are delivered and which events you receive.
+
+
+        **Required scope:** `webhooks:read`
+
+
+        `subscribed-events` is returned exactly as stored: `["*"]` means you are
+
+        enrolled in every event type, including ones added in future, rather
+
+        than pinned to the list you see in `available-events` today.'
+      summary: Retrieve your webhook configuration
+      parameters:
+      - in: query
+        name: fields[webhook-configurations]
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - id
+            - webhook-url
+            - subscribed-events
+            - available-events
+        description: endpoint return only specific fields in the response on a per-type basis by including a fields[TYPE] query parameter.
+        explode: false
+      tags:
+      - Webhooks
+      security:
+      - oauth2:
+        - webhooks:read
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/WebhookConfigurationResponse'
+              examples:
+                SubscribedToEveryEventType:
+                  value:
+                    data:
+                      type: webhook-configurations
+                      id: your-client-id
+                      attributes:
+                        webhook-url: https://example.com/beyond/webhooks
+                        subscribed-events:
+                        - '*'
+                        available-events:
+                        - account.created
+                        - account.refreshed
+                        - listing.base_price_changed
+                        - listing.created
+                        - listing.in_active_market_changed
+                        - listing.refreshed
+                        - webhook.ping
+                  summary: Subscribed to every event type
+          description: ''
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+    patch:
+      operationId: patch_webhook_configuration
+      description: 'Change your webhook destination, your event selection, or both.
+
+
+        **Required scope:** `webhooks:write` (application-level tokens only)
+
+
+        Each attribute you send replaces the stored value wholesale —
+
+        `subscribed-events` is not merged, so send the full list you want. Omit
+
+        an attribute to leave it untouched.
+
+
+        `data.id` is your own client id, the same value `GET` returns. JSON:API
+
+        requires it on every update: omitting it returns `400`, and another
+
+        application''s id returns `409`.
+
+
+        A new `webhook-url` takes effect immediately; Beyond does not probe it
+
+        first, so verify it is live before switching. Send an empty string to
+
+        stop delivery while keeping your event selection.'
+      summary: Update your webhook configuration
+      tags:
+      - Webhooks
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedWebhookConfigurationRequest'
+            examples:
+              PinToSpecificEventTypes:
+                value:
+                  data:
+                    type: webhook-configurations
+                    id: your-client-id
+                    attributes:
+                      subscribed-events:
+                      - listing.created
+                      - listing.base_price_changed
+                summary: Receive only the event types you list
+              ChangeTheDestinationURL:
+                value:
+                  data:
+                    type: webhook-configurations
+                    id: your-client-id
+                    attributes:
+                      webhook-url: https://example.com/beyond/webhooks-v2
+                summary: Move deliveries to a new endpoint
+        required: true
+      security:
+      - oauth2:
+        - webhooks:write
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/WebhookConfigurationResponse'
+              examples:
+                UpdatedConfiguration:
+                  value:
+                    data:
+                      type: webhook-configurations
+                      id: your-client-id
+                      attributes:
+                        webhook-url: https://example.com/beyond/webhooks
+                        subscribed-events:
+                        - listing.created
+                        - listing.base_price_changed
+                        available-events:
+                        - account.created
+                        - account.refreshed
+                        - listing.base_price_changed
+                        - listing.created
+                        - listing.in_active_market_changed
+                        - listing.refreshed
+                        - webhook.ping
+                  summary: Updated configuration
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+  /api/v1/webhook-events/:
+    get:
+      operationId: list_webhook_events
+      description: 'List the webhook events delivered to your partner application.
+
+
+        **Required scope:** `webhooks:read`
+
+
+        Application-level tokens see every event sent to the app''s webhook
+
+        endpoint; user-scoped tokens see only their own user''s events. Filter
+
+        with `filter[event-type]`, `filter[status]`, and the
+
+        `filter[created-after]`/`filter[created-before]` time window. Pass
+
+        `include-body=true` to inline each event''s body so you can reconcile and
+
+        reprocess a range without a follow-up request per event.'
+      summary: List delivered webhook events
+      parameters:
+      - name: page[number]
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page[size]
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: filter[event-type]
+        schema:
+          type: string
+        description: Only return events of this type.
+      - in: query
+        name: filter[status]
+        schema:
+          type: string
+          enum:
+          - delivered
+          - exhausted
+          - failed
+          - pending
+        description: Only return events in this delivery status (pending, delivered, failed, exhausted).
+      - in: query
+        name: filter[created-after]
+        schema:
+          type: string
+          format: date-time
+        description: Only return events created at or after this ISO 8601 timestamp (e.g. 2026-07-13T19:00:00Z).
+      - in: query
+        name: filter[created-before]
+        schema:
+          type: string
+          format: date-time
+        description: Only return events created at or before this ISO 8601 timestamp (e.g. 2026-07-13T20:00:00Z).
+      - in: query
+        name: include-body
+        schema:
+          type: boolean
+        description: Include each event's full body (nested JSON) in the list. Off by default to keep the list light; enable it to reconcile and reprocess a range of events in a single call.
+      - in: query
+        name: fields[webhook-events]
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - id
+            - event-type
+            - status
+            - content-type
+            - attempts
+            - last-status-code
+            - last-error
+            - created-at
+            - delivered-at
+            - failed-at
+        description: endpoint return only specific fields in the response on a per-type basis by including a fields[TYPE] query parameter.
+        explode: false
+      tags:
+      - Webhooks
+      security:
+      - oauth2:
+        - webhooks:read
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/PaginatedWebhookEventList'
+              examples:
+                DeliveredEvents:
+                  value:
+                    data:
+                    - data:
+                      - type: webhook-events
+                        id: msg_2h9pXbFqR7Jk
+                        attributes:
+                          event-type: listing.refreshed
+                          status: delivered
+                          content-type: application/vnd.api+json
+                          attempts: 1
+                          last-status-code: 200
+                          last-error: null
+                          created-at: '2026-08-01T10:15:00Z'
+                          delivered-at: '2026-08-01T10:15:02Z'
+                          failed-at: null
+                      meta:
+                        pagination:
+                          page: 1
+                          pages: 1
+                          count: 1
+                    links:
+                      first: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=1
+                      last: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=9
+                      prev: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=1
+                      next: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=3
+                    meta:
+                      pagination:
+                        count: 42
+                        page: 2
+                        pages: 5
+                  summary: Delivered events
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+  /api/v1/webhook-events/{msg_id}/:
+    get:
+      operationId: get_webhook_event
+      description: 'Retrieve one delivered webhook event, including the body sent.
+
+
+        **Required scope:** `webhooks:read`
+
+
+        The event is returned only when it belongs to your token''s scope; an id
+
+        for another partner (or user) reads as 404.'
+      summary: Retrieve a delivered webhook event by id
+      parameters:
+      - in: path
+        name: msg_id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: fields[webhook-events]
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - id
+            - event-type
+            - status
+            - content-type
+            - attempts
+            - last-status-code
+            - last-error
+            - created-at
+            - delivered-at
+            - failed-at
+            - url
+            - body
+        description: endpoint return only specific fields in the response on a per-type basis by including a fields[TYPE] query parameter.
+        explode: false
+      tags:
+      - Webhooks
+      security:
+      - oauth2:
+        - webhooks:read
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/WebhookEventDetailResponse'
+              examples:
+                DeliveredEventWithBody:
+                  value:
+                    data:
+                      type: webhook-events
+                      id: msg_2h9pXbFqR7Jk
+                      attributes:
+                        event-type: listing.refreshed
+                        status: delivered
+                        content-type: application/vnd.api+json
+                        attempts: 1
+                        last-status-code: 200
+                        last-error: null
+                        created-at: '2026-08-01T10:15:00Z'
+                        delivered-at: '2026-08-01T10:15:02Z'
+                        failed-at: null
+                        url: https://partner.example.com/webhooks/beyond
+                        body:
+                          data:
+                            type: listing-refreshed-events
+                            id: msg_2h9pXbFqR7Jk
+                            attributes:
+                              '...': the document your endpoint received
+                  summary: Delivered event with body
+          description: ''
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found - resource does not exist
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
 webhooks:
   accountCreated:
     post:
@@ -64,13 +457,13 @@ webhooks:
           description: Endpoint permanently gone. Partners should respond 410 to disable redelivery; future iterations may auto-disable endpoints in this case.
   listingBasePriceChanged:
     post:
-      description: 'Sent whenever a listing''s effective base price changes — through the Partners API or any other Beyond surface. This covers the user-set base price changing, and — while no user base price is set — the starting base price Beyond''s algorithm computes from the listing''s characteristics changing from one value to another. The first-ever price (null → value) is delivered as `listing.created` instead, not here.
+      description: 'Sent whenever a listing''s effective base price changes — through the Beyond API or any other Beyond surface. This covers the user-set base price changing, and — while no user base price is set — the starting base price Beyond''s algorithm computes from the listing''s characteristics changing from one value to another. The first-ever price (null → value) is delivered as `listing.created` instead, not here.
 
 
         `enabled` reports whether the listing has pricing enabled: use it to tell a live price change (`enabled: true`) from a speculative one (`enabled: false`, e.g. a computed starting price on a not-yet-enabled listing).
 
 
-        `change-source` reports what moved the price: `user` for a change made by an authenticated actor (Partners API, the Beyond app, or an admin), or `system` for one made by an automatic process (Beyond''s algorithm computing a starting price, a scheduled auto-approved booking review, a background job). A change to the computed starting price is always `system`.
+        `change-source` reports what moved the price: `user` for a change made by an authenticated actor (Beyond API, the Beyond app, or an admin), or `system` for one made by an automatic process (Beyond''s algorithm computing a starting price, a scheduled auto-approved booking review, a background job). A change to the computed starting price is always `system`.
 
 
         `changed-by` names the individual behind a `user` change by email. It is null when no individual is responsible: every `system` change, and any change made by a machine — an app-level (`client_credentials`) Partners API token acts for the account as a whole, so it names no person. Changes made by Beyond staff on your behalf report `support@beyondpricing.com` rather than an internal address.
@@ -96,7 +489,7 @@ webhooks:
       description: 'Sent when a new listing owned by one of your users is fully set up — after Beyond has computed its initial base price — and when an attempt to set one up fails. Use it to learn about new listings, and about listings that need attention before they can be created, without polling. The same `msg_id` is reused across delivery retries, so partners can dedupe on the `webhook-id` header.
 
 
-        With `status=''succeeded''` the event fires once per listing, the first time its base price is computed. With `status=''failed''` it fires on every failing sync attempt — a listing whose channel setup stays broken repeats the event on each re-sync — carrying a human-readable `error`; the `listing` relationship and the listing attributes are null or omitted when the listing does not exist yet. Verify the signature before parsing the body. See the partner webhooks guide for the verification recipe.'
+        With `status=''succeeded''` the event fires when the listing''s base price is first computed, and again — carrying `restored=true` — if the listing is ever removed and later comes back, so treat it as an upsert rather than an insert. With `status=''failed''` it fires on every failing sync attempt — a listing whose channel setup stays broken repeats the event on each re-sync — carrying a human-readable `error`; the `listing` relationship and the listing attributes are null or omitted when the listing does not exist yet. Verify the signature before parsing the body. See the partner webhooks guide for the verification recipe.'
       summary: Listing created
       tags:
       - Webhooks
@@ -116,7 +509,10 @@ webhooks:
       description: 'Sent when a listing''s `in-active-market` attribute — the one the listings endpoint serves — changes. `in-active-market: true` guarantees the listing''s calendar endpoint works and automated price refresh is on; while false the calendar may return 400 ("not yet clustered") and price refresh is off. Subscribe to it to learn when a listing you already received leaves or re-enters that ready state, without polling.
 
 
-        The transition is rare: it happens when Beyond removes or re-assigns the listing''s pricing cluster, or activates/deactivates the listing''s market. It fires once per flip, in either direction — `in-active-market` carries the new value. A market-wide change (e.g. Beyond activating a market) reaches each listing on its next daily sync, so expect one event per affected listing spread over about a day. There is no failure variant. The same `msg_id` is reused across delivery retries, so partners can dedupe on the `webhook-id` header. Verify the signature before parsing the body. See the partner webhooks guide for the verification recipe.'
+        It also fires once at creation for a listing created outside any active market (Beyond found no pricing cluster covering its location). Such a listing gets no `listing.created` event, so this is the first notification you receive about it — treat an unknown listing id as new rather than as an error.
+
+
+        Otherwise the transition is rare: it happens when Beyond removes or re-assigns the listing''s pricing cluster, or activates/deactivates the listing''s market. It fires once per flip, in either direction — `in-active-market` carries the new value. A market-wide change (e.g. Beyond activating a market) reaches each listing on its next daily sync, so expect one event per affected listing spread over about a day. There is no failure variant. The same `msg_id` is reused across delivery retries, so partners can dedupe on the `webhook-id` header. Verify the signature before parsing the body. See the partner webhooks guide for the verification recipe.'
       summary: Listing in-active-market changed
       tags:
       - Webhooks
@@ -151,28 +547,215 @@ webhooks:
           description: Delivery acknowledged (any 2xx).
         '410':
           description: Endpoint permanently gone. Partners should respond 410 to disable redelivery; future iterations may auto-disable endpoints in this case.
+  webhookPing:
+    post:
+      description: 'Sent when a webhook URL is saved from the Beyond dashboard and whenever a test ping is requested there. It carries no domain change: answer any `2xx` and discard the body. The ping is signed like every other delivery, so a receiver that enforces signatures from day one passes verification.
+
+
+        A ping is not gated on your event selection: it is sent even when `webhook.ping` is not in `subscribed-events`, because its purpose is to confirm the endpoint before any real event is delivered. Redirects are not followed and a non-`2xx` answer means the URL is not saved.
+
+
+        Verify the signature before parsing the body. See the partner webhooks guide for the verification recipe.'
+      summary: Webhook endpoint verification ping
+      tags:
+      - Webhooks
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/WebhookPingEvent'
+        required: true
+      responses:
+        '200':
+          description: Delivery acknowledged (any 2xx).
+        '410':
+          description: Endpoint permanently gone. Partners should respond 410 to disable redelivery; future iterations may auto-disable endpoints in this case.
 components:
   schemas:
-    ListingCreatedEvent:
+    _RelationshipData:
+      type: object
+      description: JSON:API ``relationships.<name>.data`` body — ``{type, id}``.
+      properties:
+        type:
+          type: string
+          description: JSON:API resource type
+        id:
+          type: string
+          description: Resource identifier
+      required:
+      - id
+      - type
+    WebhookPingEventData:
+      type: object
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
+      properties:
+        type:
+          type: string
+          description: JSON:API resource type for this event
+        id:
+          type: string
+          description: ULID event identifier (msg_<base32>), same as the webhook-id header. Stable across delivery retries; dedupe on it.
+        attributes:
+          $ref: '#/components/schemas/WebhookPingEventAttributes'
+        relationships:
+          $ref: '#/components/schemas/WebhookPingEventRelationships'
+      required:
+      - attributes
+      - id
+      - relationships
+      - type
+    WebhookConfiguration:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/WebhookConfigurationResourceTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Your application's client id.
+        attributes:
+          type: object
+          properties:
+            webhook-url:
+              type:
+              - string
+              - 'null'
+              format: uri
+              description: HTTPS URL that receives your webhook deliveries. Must be publicly reachable — loopback, link-local, and private addresses are rejected. Set it to an empty string to stop delivery without losing your event selection. A new URL takes effect immediately; there is no verification step, and deliveries already in flight may still land on the previous URL.
+            subscribed-events:
+              type: array
+              items:
+                type: string
+              description: Event types delivered to your endpoint. The default is `["*"]`, which subscribes to every event type — including ones Beyond adds in future. Send `["*"]` to keep that; send an explicit list to pin yourself to exactly those types and receive nothing new without changing this setting. An empty list disables every event.
+            available-events:
+              type: array
+              items:
+                type: string
+              readOnly: true
+              description: Every event type you may subscribe to.
+    ListingInActiveMarketChangedEvent:
       type: object
       properties:
         meta:
           $ref: '#/components/schemas/_EventMeta'
         data:
-          $ref: '#/components/schemas/ListingCreatedEventData'
+          $ref: '#/components/schemas/ListingInActiveMarketChangedEventData'
       required:
       - data
       - meta
-    ListingBasePriceChangedEvent:
+    WebhookPingEvent:
       type: object
       properties:
         meta:
           $ref: '#/components/schemas/_EventMeta'
         data:
-          $ref: '#/components/schemas/ListingBasePriceChangedEventData'
+          $ref: '#/components/schemas/WebhookPingEventData'
       required:
       - data
       - meta
+    ListingInActiveMarketChangedEventRelationships:
+      type: object
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
+      properties:
+        listing:
+          $ref: '#/components/schemas/_Relationship'
+        user:
+          $ref: '#/components/schemas/_Relationship'
+        account:
+          $ref: '#/components/schemas/_Relationship'
+      required:
+      - listing
+      - user
+    WebhookEventDetail:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/WebhookEventResourceTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Stable delivery id (the webhook-id partners dedupe on).
+        attributes:
+          type: object
+          properties:
+            event-type:
+              type: string
+              description: The event that was delivered.
+            status:
+              type: string
+              description: 'Delivery status: pending, delivered, failed, or exhausted.'
+            content-type:
+              type: string
+              description: Content-Type of the delivery.
+            attempts:
+              type: integer
+              description: Number of delivery attempts made.
+            last-status-code:
+              type:
+              - integer
+              - 'null'
+              description: HTTP status of the last delivery attempt.
+            last-error:
+              type:
+              - string
+              - 'null'
+              description: Error from the last failed attempt, if any.
+            created-at:
+              type: string
+              description: When the event was accepted.
+            delivered-at:
+              type:
+              - string
+              - 'null'
+              description: When the event was delivered (2xx), if it was.
+            failed-at:
+              type:
+              - string
+              - 'null'
+              description: When the event reached a terminal failure, if it did.
+            url:
+              type: string
+              description: The endpoint the event was delivered to.
+            body:
+              type: object
+              additionalProperties: {}
+              description: The document that was delivered, as a nested JSON object partners can traverse directly.
+              readOnly: true
+          required:
+          - event-type
+          - status
+          - content-type
+          - attempts
+          - last-status-code
+          - last-error
+          - created-at
+          - delivered-at
+          - failed-at
+          - url
     AccountCreatedEventRelationships:
       type: object
       description: 'Dasherizes field names on output and un-dasherizes on input.
@@ -191,40 +774,280 @@ components:
       required:
       - account
       - user
-    _RelationshipData:
+    ListingCreatedEventRelationships:
       type: object
-      description: JSON:API ``relationships.<name>.data`` body — ``{type, id}``.
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
+      properties:
+        listing:
+          $ref: '#/components/schemas/_Relationship'
+        user:
+          $ref: '#/components/schemas/_Relationship'
+        account:
+          $ref: '#/components/schemas/_Relationship'
+      required:
+      - user
+    WebhookConfigurationResourceTypeEnum:
+      type: string
+      enum:
+      - webhook-configurations
+    AccountCreatedEventData:
+      type: object
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
       properties:
         type:
           type: string
-          description: JSON:API resource type
+          description: JSON:API resource type for this event
         id:
           type: string
-          description: Resource identifier
+          description: ULID event identifier (msg_<base32>), same as the webhook-id header. Stable across delivery retries; dedupe on it.
+        attributes:
+          $ref: '#/components/schemas/AccountCreatedEventAttributes'
+        relationships:
+          $ref: '#/components/schemas/AccountCreatedEventRelationships'
       required:
+      - attributes
       - id
+      - relationships
       - type
-    ListingRefreshedEvent:
+    _EventMeta:
+      type: object
+      description: JSON:API top-level ``meta`` for partner events.
+      properties:
+        type:
+          type: string
+          description: Event type (e.g., 'listing.refreshed')
+        sent-at:
+          type: string
+          format: date-time
+          description: UTC timestamp the event envelope was assembled (RFC 3339)
+      required:
+      - sent-at
+      - type
+    WebhookEventResourceTypeEnum:
+      type: string
+      enum:
+      - webhook-events
+    WebhookPingEventRelationships:
+      type: object
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
+      properties:
+        user:
+          $ref: '#/components/schemas/_Relationship'
+      required:
+      - user
+    ListingCreatedEventAttributes:
+      type: object
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
+      properties:
+        status:
+          enum:
+          - succeeded
+          - failed
+          type: string
+          description: 'Outcome of the listing setup. ''succeeded'' means the listing is fully set up with its initial base price computed; ''failed'' means a sync attempt could not create the listing.
+
+
+            * `succeeded` - succeeded
+
+            * `failed` - failed'
+        created-at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: UTC timestamp when the listing was created (RFC 3339). Null on a failed creation attempt where the listing does not exist yet.
+        title:
+          type:
+          - string
+          - 'null'
+          description: The listing's title.
+        currency:
+          type:
+          - string
+          - 'null'
+          description: ISO 4217 currency code the listing is denominated in.
+        base-price:
+          type:
+          - integer
+          - 'null'
+          description: The listing's initial base price, computed by Beyond when the listing was set up, in the listing currency. A whole number — the same integer the listings endpoint exposes as base-price (fractional amounts are truncated toward zero). Null on a failed creation attempt.
+        channel-listings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListingCreatedEventChannelListings'
+          description: The listing's active channel listings — one entry per channel the listing is syndicated to, mirroring channel-listings on the listing resource. Empty on a listing with no active channel listing.
+        restored:
+          type:
+          - boolean
+          - 'null'
+          description: Present and true only when this listing was previously removed and has now come back — for example after the account it belongs to was deleted and re-created. Omitted entirely for a first-time creation.
+        error:
+          type:
+          - string
+          - 'null'
+          description: Short, human-readable failure description. Present only when status='failed'. Stable across retries of the same delivery.
+      required:
+      - base-price
+      - channel-listings
+      - created-at
+      - currency
+      - status
+      - title
+    AccountRefreshedEvent:
       type: object
       properties:
         meta:
           $ref: '#/components/schemas/_EventMeta'
         data:
-          $ref: '#/components/schemas/ListingRefreshedEventData'
+          $ref: '#/components/schemas/AccountRefreshedEventData'
       required:
       - data
       - meta
-    AccountCreatedEvent:
+    AccountRefreshedEventRelationships:
+      type: object
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
+      properties:
+        user:
+          $ref: '#/components/schemas/_Relationship'
+        account:
+          $ref: '#/components/schemas/_Relationship'
+      required:
+      - account
+      - user
+    AccountRefreshedEventAttributes:
+      type: object
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
+      properties:
+        status:
+          enum:
+          - succeeded
+          - failed
+          type: string
+          description: 'Terminal outcome of the refresh. ''succeeded'' means every listing the refresh considered synced without error; ''failed'' means at least one listing failed, or the sync itself did not complete.
+
+
+            * `succeeded` - succeeded
+
+            * `failed` - failed'
+        completed-at:
+          type: string
+          format: date-time
+          description: UTC timestamp when the refresh reached its terminal state (RFC 3339)
+        channel:
+          type: string
+          description: Channel the account is connected to (e.g. 'airbnb', 'hostaway').
+        nb-listings-synced:
+          type: integer
+          description: Number of listings the refresh successfully re-synced. Listings skipped as recently synced are not counted, so this can be lower than the account's listing count — and 0 when everything was skipped.
+        nb-listings-failed:
+          type:
+          - integer
+          - 'null'
+          description: Number of listings the refresh could not sync. Always present; 0 when status='succeeded'. It is null when the sync did not run to completion (for example an infrastructure failure or a channel-wide error), so the per-listing count is unknown — in that case nb-listings-synced reports how many listings exist on the account, and status is 'failed'.
+        recent-sync-threshold-minutes:
+          type: integer
+          description: The threshold the refresh ran with, echoed from the request. Listings synced within this many minutes were skipped. 0 means no listing was skipped.
+        error:
+          type:
+          - string
+          - 'null'
+          description: Short, human-readable failure description. Present only when status='failed'. Stable across retries of the same delivery.
+      required:
+      - channel
+      - completed-at
+      - nb-listings-failed
+      - nb-listings-synced
+      - recent-sync-threshold-minutes
+      - status
+    ListingBasePriceChangedEventRelationships:
+      type: object
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
+      properties:
+        listing:
+          $ref: '#/components/schemas/_Relationship'
+        user:
+          $ref: '#/components/schemas/_Relationship'
+        account:
+          $ref: '#/components/schemas/_Relationship'
+      required:
+      - listing
+      - user
+    WebhookPingEventAttributes:
+      type: object
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
+      properties:
+        message:
+          type: string
+          description: Human-readable reason for the ping, e.g. 'Beyond webhook endpoint verification'. Informational only.
+      required:
+      - message
+    ListingBasePriceChangedEvent:
       type: object
       properties:
         meta:
           $ref: '#/components/schemas/_EventMeta'
         data:
-          $ref: '#/components/schemas/AccountCreatedEventData'
+          $ref: '#/components/schemas/ListingBasePriceChangedEventData'
       required:
       - data
       - meta
-    ListingBasePriceChangedEventChannelListings:
+    ListingInActiveMarketChangedEventChannelListings:
       type: object
       description: 'Dasherizes field names on output and un-dasherizes on input.
 
@@ -244,74 +1067,6 @@ components:
       required:
       - channel
       - channel-id
-    ListingInActiveMarketChangedEvent:
-      type: object
-      properties:
-        meta:
-          $ref: '#/components/schemas/_EventMeta'
-        data:
-          $ref: '#/components/schemas/ListingInActiveMarketChangedEventData'
-      required:
-      - data
-      - meta
-    AccountRefreshedEvent:
-      type: object
-      properties:
-        meta:
-          $ref: '#/components/schemas/_EventMeta'
-        data:
-          $ref: '#/components/schemas/AccountRefreshedEventData'
-      required:
-      - data
-      - meta
-    AccountCreatedEventAttributes:
-      type: object
-      description: 'Dasherizes field names on output and un-dasherizes on input.
-
-
-        Apply to nested (non-resource) serializers so their keys match
-
-        the top-level JSON:API dasherized format. Top-level resource
-
-        serializers must NOT use this mixin (the renderer handles them).'
-      properties:
-        status:
-          enum:
-          - succeeded
-          - failed
-          type: string
-          description: 'Terminal outcome of the initial listing sync. ''succeeded'' means every listing on the account synced without error; ''failed'' means at least one listing failed, or the sync itself did not complete.
-
-
-            * `succeeded` - succeeded
-
-            * `failed` - failed'
-        completed-at:
-          type: string
-          format: date-time
-          description: UTC timestamp when the sync reached its terminal state (RFC 3339)
-        channel:
-          type: string
-          description: Channel the account is connected to (e.g. 'airbnb', 'hostaway').
-        nb-listings-synced:
-          type: integer
-          description: Number of listings successfully created (or, for a revived account, restored) on this account by the sync.
-        nb-listings-failed:
-          type:
-          - integer
-          - 'null'
-          description: Number of listings the sync could not create. Always present; 0 when status='succeeded'. It is null when the sync did not run to completion (for example an infrastructure failure or a channel-wide error), so the per-listing count is unknown — in that case nb-listings-synced reports how many listings exist on the account, and status is 'failed'.
-        error:
-          type:
-          - string
-          - 'null'
-          description: Short, human-readable failure description. Present only when status='failed'. Stable across retries of the same delivery.
-      required:
-      - channel
-      - completed-at
-      - nb-listings-failed
-      - nb-listings-synced
-      - status
     ListingCreatedEventData:
       type: object
       description: 'Dasherizes field names on output and un-dasherizes on input.
@@ -371,55 +1126,34 @@ components:
       - channel-listings
       - in-active-market
       - title
-    _RelationshipLinks:
+    ListingBasePriceChangedEventChannelListings:
       type: object
-      description: JSON:API ``relationships.<name>.links`` body — partner follow-up URL.
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
       properties:
-        related:
+        channel:
           type: string
-          format: uri
-          description: Absolute URL to GET the current state of the related resource
-    ListingBasePriceChangedEventRelationships:
-      type: object
-      description: 'Dasherizes field names on output and un-dasherizes on input.
-
-
-        Apply to nested (non-resource) serializers so their keys match
-
-        the top-level JSON:API dasherized format. Top-level resource
-
-        serializers must NOT use this mixin (the renderer handles them).'
-      properties:
-        listing:
-          $ref: '#/components/schemas/_Relationship'
-        user:
-          $ref: '#/components/schemas/_Relationship'
-        account:
-          $ref: '#/components/schemas/_Relationship'
+          description: Channel this channel listing belongs to (e.g. 'airbnb', 'hostaway').
+        channel-id:
+          type: string
+          description: The listing's identifier on the channel side — the same value exposed as channel-listings[].channel-id on the listing resource. Use it to correlate the event with your own records.
       required:
-      - listing
-      - user
-    ListingInActiveMarketChangedEventRelationships:
+      - channel
+      - channel-id
+    WebhookConfigurationResponse:
       type: object
-      description: 'Dasherizes field names on output and un-dasherizes on input.
-
-
-        Apply to nested (non-resource) serializers so their keys match
-
-        the top-level JSON:API dasherized format. Top-level resource
-
-        serializers must NOT use this mixin (the renderer handles them).'
       properties:
-        listing:
-          $ref: '#/components/schemas/_Relationship'
-        user:
-          $ref: '#/components/schemas/_Relationship'
-        account:
-          $ref: '#/components/schemas/_Relationship'
+        data:
+          $ref: '#/components/schemas/WebhookConfiguration'
       required:
-      - listing
-      - user
-    ListingInActiveMarketChangedEventData:
+      - data
+    ListingBasePriceChangedEventData:
       type: object
       description: 'Dasherizes field names on output and un-dasherizes on input.
 
@@ -437,66 +1171,91 @@ components:
           type: string
           description: ULID event identifier (msg_<base32>), same as the webhook-id header. Stable across delivery retries; dedupe on it.
         attributes:
-          $ref: '#/components/schemas/ListingInActiveMarketChangedEventAttributes'
+          $ref: '#/components/schemas/ListingBasePriceChangedEventAttributes'
         relationships:
-          $ref: '#/components/schemas/ListingInActiveMarketChangedEventRelationships'
+          $ref: '#/components/schemas/ListingBasePriceChangedEventRelationships'
       required:
       - attributes
       - id
       - relationships
       - type
-    AccountRefreshedEventAttributes:
+    PaginatedWebhookEventList:
       type: object
-      description: 'Dasherizes field names on output and un-dasherizes on input.
-
-
-        Apply to nested (non-resource) serializers so their keys match
-
-        the top-level JSON:API dasherized format. Top-level resource
-
-        serializers must NOT use this mixin (the renderer handles them).'
       properties:
-        status:
-          enum:
-          - succeeded
-          - failed
-          type: string
-          description: 'Terminal outcome of the refresh. ''succeeded'' means every listing the refresh considered synced without error; ''failed'' means at least one listing failed, or the sync itself did not complete.
-
-
-            * `succeeded` - succeeded
-
-            * `failed` - failed'
-        completed-at:
-          type: string
-          format: date-time
-          description: UTC timestamp when the refresh reached its terminal state (RFC 3339)
-        channel:
-          type: string
-          description: Channel the account is connected to (e.g. 'airbnb', 'hostaway').
-        nb-listings-synced:
-          type: integer
-          description: Number of listings the refresh successfully re-synced. Listings skipped as recently synced are not counted, so this can be lower than the account's listing count — and 0 when everything was skipped.
-        nb-listings-failed:
-          type:
-          - integer
-          - 'null'
-          description: Number of listings the refresh could not sync. Always present; 0 when status='succeeded'. It is null when the sync did not run to completion (for example an infrastructure failure or a channel-wide error), so the per-listing count is unknown — in that case nb-listings-synced reports how many listings exist on the account, and status is 'failed'.
-        recent-sync-threshold-minutes:
-          type: integer
-          description: The threshold the refresh ran with, echoed from the request. Listings synced within this many minutes were skipped. 0 means no listing was skipped.
-        error:
-          type:
-          - string
-          - 'null'
-          description: Short, human-readable failure description. Present only when status='failed'. Stable across retries of the same delivery.
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookEvent'
+        links:
+          type: object
+          description: Pagination links for the primary data. These keys MUST be used for pagination links; each MUST be omitted or `null` when that link is unavailable. Values follow JSON:API link rules (URI string, link object, or null). https://jsonapi.org/format/#fetching-pagination https://jsonapi.org/format/#document-links
+          properties:
+            first:
+              type:
+              - string
+              - 'null'
+              format: uri
+              example: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=1
+              description: 'The first page of data. A JSON:API link: URI string, link object, or null. See https://jsonapi.org/format/#document-links.'
+            last:
+              type:
+              - string
+              - 'null'
+              format: uri
+              example: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=9
+              description: 'The last page of data. A JSON:API link: URI string, link object, or null. See https://jsonapi.org/format/#document-links.'
+            prev:
+              type:
+              - string
+              - 'null'
+              format: uri
+              example: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=1
+              description: 'The previous page of data. A JSON:API link: URI string, link object, or null. See https://jsonapi.org/format/#document-links.'
+            next:
+              type:
+              - string
+              - 'null'
+              format: uri
+              example: http://example.com/articles?page%5Bsize%5D=10&page%5Bnumber%5D=3
+              description: 'The next page of data. A JSON:API link: URI string, link object, or null. See https://jsonapi.org/format/#document-links.'
+          additionalProperties: false
+        meta:
+          type: object
+          description: Non-standard meta-information. Page-number stacks often nest totals under `pagination`. JSON:API does not define these keys. Servers MAY add other `meta` members; this schema documents the usual djangorestframework-json-api shape only. https://jsonapi.org/format/#document-meta
+          properties:
+            pagination:
+              type: object
+              description: Typical page-number metadata from djangorestframework-json-api; not mandated by JSON:API.
+              properties:
+                count:
+                  type: integer
+                  minimum: 0
+                  example: 42
+                  description: Total number of resources across all pages.
+                page:
+                  type: integer
+                  minimum: 1
+                  example: 2
+                  description: Current page number (1-based).
+                pages:
+                  type: integer
+                  minimum: 0
+                  example: 5
+                  description: Total number of pages.
+              additionalProperties: false
+          additionalProperties: false
       required:
-      - channel
-      - completed-at
-      - nb-listings-failed
-      - nb-listings-synced
-      - recent-sync-threshold-minutes
-      - status
+      - data
+    ListingRefreshedEvent:
+      type: object
+      properties:
+        meta:
+          $ref: '#/components/schemas/_EventMeta'
+        data:
+          $ref: '#/components/schemas/ListingRefreshedEventData'
+      required:
+      - data
+      - meta
     ListingBasePriceChangedEventAttributes:
       type: object
       description: 'Dasherizes field names on output and un-dasherizes on input.
@@ -545,7 +1304,7 @@ components:
           - user
           - system
           type: string
-          description: 'What moved the base price. ''user'' — an authenticated actor (the Partners API, the Beyond app, or an admin). ''system'' — an automatic process (Beyond''s algorithm computing a starting price, a scheduled auto-approved booking review, a background job). A change to the computed starting price is always ''system''.
+          description: 'What moved the base price. ''user'' — an authenticated actor (the Beyond API, the Beyond app, or an admin). ''system'' — an automatic process (Beyond''s algorithm computing a starting price, a scheduled auto-approved booking review, a background job). A change to the computed starting price is always ''system''.
 
 
             * `user` - user
@@ -555,7 +1314,7 @@ components:
           type:
           - string
           - 'null'
-          description: Email of the individual who made a 'user' change, when there is one to name. Null for every 'system' change, and for a 'user' change made by a machine — an app-level (client_credentials) Partners API token acts for the account as a whole, not for a person. Changes made by Beyond staff on your behalf report 'support@beyondpricing.com'.
+          description: Email of the individual who made a 'user' change, when there is one to name. Null for every 'system' change, and for a 'user' change made by a machine — an app-level (client_credentials) Beyond API token acts for the account as a whole, not for a person. Changes made by Beyond staff on your behalf report 'support@beyondpricing.com'.
       required:
       - change-source
       - changed-at
@@ -566,52 +1325,6 @@ components:
       - new-currency
       - old-base-price
       - old-currency
-    ListingCreatedEventChannelListings:
-      type: object
-      description: 'Dasherizes field names on output and un-dasherizes on input.
-
-
-        Apply to nested (non-resource) serializers so their keys match
-
-        the top-level JSON:API dasherized format. Top-level resource
-
-        serializers must NOT use this mixin (the renderer handles them).'
-      properties:
-        channel:
-          type: string
-          description: Channel this channel listing belongs to (e.g. 'airbnb', 'hostaway').
-        channel-id:
-          type: string
-          description: The listing's identifier on the channel side — the same value exposed as channel-listings[].channel-id on the listing resource. Use it to correlate the event with your own records.
-      required:
-      - channel
-      - channel-id
-    ListingBasePriceChangedEventData:
-      type: object
-      description: 'Dasherizes field names on output and un-dasherizes on input.
-
-
-        Apply to nested (non-resource) serializers so their keys match
-
-        the top-level JSON:API dasherized format. Top-level resource
-
-        serializers must NOT use this mixin (the renderer handles them).'
-      properties:
-        type:
-          type: string
-          description: JSON:API resource type for this event
-        id:
-          type: string
-          description: ULID event identifier (msg_<base32>), same as the webhook-id header. Stable across delivery retries; dedupe on it.
-        attributes:
-          $ref: '#/components/schemas/ListingBasePriceChangedEventAttributes'
-        relationships:
-          $ref: '#/components/schemas/ListingBasePriceChangedEventRelationships'
-      required:
-      - attributes
-      - id
-      - relationships
-      - type
     ListingRefreshedEventRelationships:
       type: object
       description: 'Dasherizes field names on output and un-dasherizes on input.
@@ -633,100 +1346,85 @@ components:
       - account
       - listing
       - user
-    _EventMeta:
+    _Relationship:
       type: object
-      description: JSON:API top-level ``meta`` for partner events.
+      description: 'Generic JSON:API to-one relationship — ``{data: {type, id}, links?}``.'
+      properties:
+        data:
+          $ref: '#/components/schemas/_RelationshipData'
+        links:
+          $ref: '#/components/schemas/_RelationshipLinks'
+      required:
+      - data
+    ListingInActiveMarketChangedEventData:
+      type: object
+      description: 'Dasherizes field names on output and un-dasherizes on input.
+
+
+        Apply to nested (non-resource) serializers so their keys match
+
+        the top-level JSON:API dasherized format. Top-level resource
+
+        serializers must NOT use this mixin (the renderer handles them).'
       properties:
         type:
           type: string
-          description: Event type (e.g., 'listing.refreshed')
-        sent-at:
+          description: JSON:API resource type for this event
+        id:
           type: string
-          format: date-time
-          description: UTC timestamp the event envelope was assembled (RFC 3339)
+          description: ULID event identifier (msg_<base32>), same as the webhook-id header. Stable across delivery retries; dedupe on it.
+        attributes:
+          $ref: '#/components/schemas/ListingInActiveMarketChangedEventAttributes'
+        relationships:
+          $ref: '#/components/schemas/ListingInActiveMarketChangedEventRelationships'
       required:
-      - sent-at
+      - attributes
+      - id
+      - relationships
       - type
-    ListingCreatedEventAttributes:
+    PatchedWebhookConfigurationRequest:
       type: object
-      description: 'Dasherizes field names on output and un-dasherizes on input.
-
-
-        Apply to nested (non-resource) serializers so their keys match
-
-        the top-level JSON:API dasherized format. Top-level resource
-
-        serializers must NOT use this mixin (the renderer handles them).'
       properties:
-        status:
-          enum:
-          - succeeded
-          - failed
-          type: string
-          description: 'Outcome of the listing setup. ''succeeded'' means the listing is fully set up with its initial base price computed; ''failed'' means a sync attempt could not create the listing.
-
-
-            * `succeeded` - succeeded
-
-            * `failed` - failed'
-        created-at:
-          type:
-          - string
-          - 'null'
-          format: date-time
-          description: UTC timestamp when the listing was created (RFC 3339). Null on a failed creation attempt where the listing does not exist yet.
-        title:
-          type:
-          - string
-          - 'null'
-          description: The listing's title.
-        currency:
-          type:
-          - string
-          - 'null'
-          description: ISO 4217 currency code the listing is denominated in.
-        base-price:
-          type:
-          - integer
-          - 'null'
-          description: The listing's initial base price, computed by Beyond when the listing was set up, in the listing currency. A whole number — the same integer the listings endpoint exposes as base-price (fractional amounts are truncated toward zero). Null on a failed creation attempt.
-        channel-listings:
-          type: array
-          items:
-            $ref: '#/components/schemas/ListingCreatedEventChannelListings'
-          description: The listing's active channel listings — one entry per channel the listing is syndicated to, mirroring channel-listings on the listing resource. Empty on a listing with no active channel listing.
-        error:
-          type:
-          - string
-          - 'null'
-          description: Short, human-readable failure description. Present only when status='failed'. Stable across retries of the same delivery.
+        data:
+          type: object
+          required:
+          - type
+          - id
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+              enum:
+              - webhook-configurations
+            id:
+              type: string
+              minLength: 1
+              description: Your application's client id.
+            attributes:
+              type: object
+              properties:
+                webhook-url:
+                  type:
+                  - string
+                  - 'null'
+                  format: uri
+                  description: HTTPS URL that receives your webhook deliveries. Must be publicly reachable — loopback, link-local, and private addresses are rejected. Set it to an empty string to stop delivery without losing your event selection. A new URL takes effect immediately; there is no verification step, and deliveries already in flight may still land on the previous URL.
+                subscribed-events:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+                  description: Event types delivered to your endpoint. The default is `["*"]`, which subscribes to every event type — including ones Beyond adds in future. Send `["*"]` to keep that; send an explicit list to pin yourself to exactly those types and receive nothing new without changing this setting. An empty list disables every event.
+                available-events:
+                  type: array
+                  items:
+                    type: string
+                  readOnly: true
+                  description: Every event type you may subscribe to.
       required:
-      - base-price
-      - channel-listings
-      - created-at
-      - currency
-      - status
-      - title
-    ListingCreatedEventRelationships:
-      type: object
-      description: 'Dasherizes field names on output and un-dasherizes on input.
-
-
-        Apply to nested (non-resource) serializers so their keys match
-
-        the top-level JSON:API dasherized format. Top-level resource
-
-        serializers must NOT use this mixin (the renderer handles them).'
-      properties:
-        listing:
-          $ref: '#/components/schemas/_Relationship'
-        user:
-          $ref: '#/components/schemas/_Relationship'
-        account:
-          $ref: '#/components/schemas/_Relationship'
-      required:
-      - user
-    ListingInActiveMarketChangedEventChannelListings:
+      - data
+    ListingCreatedEventChannelListings:
       type: object
       description: 'Dasherizes field names on output and un-dasherizes on input.
 
@@ -746,7 +1444,17 @@ components:
       required:
       - channel
       - channel-id
-    AccountRefreshedEventRelationships:
+    ListingCreatedEvent:
+      type: object
+      properties:
+        meta:
+          $ref: '#/components/schemas/_EventMeta'
+        data:
+          $ref: '#/components/schemas/ListingCreatedEventData'
+      required:
+      - data
+      - meta
+    AccountCreatedEventAttributes:
       type: object
       description: 'Dasherizes field names on output and un-dasherizes on input.
 
@@ -757,14 +1465,52 @@ components:
 
         serializers must NOT use this mixin (the renderer handles them).'
       properties:
-        user:
-          $ref: '#/components/schemas/_Relationship'
-        account:
-          $ref: '#/components/schemas/_Relationship'
+        status:
+          enum:
+          - succeeded
+          - failed
+          type: string
+          description: 'Terminal outcome of the initial listing sync. ''succeeded'' means every listing on the account synced without error; ''failed'' means at least one listing failed, or the sync itself did not complete.
+
+
+            * `succeeded` - succeeded
+
+            * `failed` - failed'
+        completed-at:
+          type: string
+          format: date-time
+          description: UTC timestamp when the sync reached its terminal state (RFC 3339)
+        channel:
+          type: string
+          description: Channel the account is connected to (e.g. 'airbnb', 'hostaway').
+        nb-listings-synced:
+          type: integer
+          description: Number of listings successfully created (or, for a revived account, restored) on this account by the sync.
+        nb-listings-failed:
+          type:
+          - integer
+          - 'null'
+          description: Number of listings the sync could not create. Always present; 0 when status='succeeded'. It is null when the sync did not run to completion (for example an infrastructure failure or a channel-wide error), so the per-listing count is unknown — in that case nb-listings-synced reports how many listings exist on the account, and status is 'failed'.
+        error:
+          type:
+          - string
+          - 'null'
+          description: Short, human-readable failure description. Present only when status='failed'. Stable across retries of the same delivery.
       required:
-      - account
-      - user
-    AccountRefreshedEventData:
+      - channel
+      - completed-at
+      - nb-listings-failed
+      - nb-listings-synced
+      - status
+    _RelationshipLinks:
+      type: object
+      description: JSON:API ``relationships.<name>.links`` body — partner follow-up URL.
+      properties:
+        related:
+          type: string
+          format: uri
+          description: Absolute URL to GET the current state of the related resource
+    ListingRefreshedEventData:
       type: object
       description: 'Dasherizes field names on output and un-dasherizes on input.
 
@@ -782,24 +1528,76 @@ components:
           type: string
           description: ULID event identifier (msg_<base32>), same as the webhook-id header. Stable across delivery retries; dedupe on it.
         attributes:
-          $ref: '#/components/schemas/AccountRefreshedEventAttributes'
+          $ref: '#/components/schemas/ListingRefreshedEventAttributes'
         relationships:
-          $ref: '#/components/schemas/AccountRefreshedEventRelationships'
+          $ref: '#/components/schemas/ListingRefreshedEventRelationships'
       required:
       - attributes
       - id
       - relationships
       - type
-    _Relationship:
+    WebhookEvent:
       type: object
-      description: 'Generic JSON:API to-one relationship — ``{data: {type, id}, links?}``.'
-      properties:
-        data:
-          $ref: '#/components/schemas/_RelationshipData'
-        links:
-          $ref: '#/components/schemas/_RelationshipLinks'
       required:
-      - data
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/WebhookEventResourceTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Stable delivery id (the webhook-id partners dedupe on).
+        attributes:
+          type: object
+          properties:
+            event-type:
+              type: string
+              description: The event that was delivered.
+            status:
+              type: string
+              description: 'Delivery status: pending, delivered, failed, or exhausted.'
+            content-type:
+              type: string
+              description: Content-Type of the delivery.
+            attempts:
+              type: integer
+              description: Number of delivery attempts made.
+            last-status-code:
+              type:
+              - integer
+              - 'null'
+              description: HTTP status of the last delivery attempt.
+            last-error:
+              type:
+              - string
+              - 'null'
+              description: Error from the last failed attempt, if any.
+            created-at:
+              type: string
+              description: When the event was accepted.
+            delivered-at:
+              type:
+              - string
+              - 'null'
+              description: When the event was delivered (2xx), if it was.
+            failed-at:
+              type:
+              - string
+              - 'null'
+              description: When the event reached a terminal failure, if it did.
+          required:
+          - event-type
+          - status
+          - content-type
+          - attempts
+          - last-status-code
+          - last-error
+          - created-at
+          - delivered-at
+          - failed-at
     ListingRefreshedEventAttributes:
       type: object
       description: 'Dasherizes field names on output and un-dasherizes on input.
@@ -842,7 +1640,14 @@ components:
       - channel-listing-id
       - completed-at
       - status
-    AccountCreatedEventData:
+    WebhookEventDetailResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/WebhookEventDetail'
+      required:
+      - data
+    AccountRefreshedEventData:
       type: object
       description: 'Dasherizes field names on output and un-dasherizes on input.
 
@@ -860,40 +1665,24 @@ components:
           type: string
           description: ULID event identifier (msg_<base32>), same as the webhook-id header. Stable across delivery retries; dedupe on it.
         attributes:
-          $ref: '#/components/schemas/AccountCreatedEventAttributes'
+          $ref: '#/components/schemas/AccountRefreshedEventAttributes'
         relationships:
-          $ref: '#/components/schemas/AccountCreatedEventRelationships'
+          $ref: '#/components/schemas/AccountRefreshedEventRelationships'
       required:
       - attributes
       - id
       - relationships
       - type
-    ListingRefreshedEventData:
+    AccountCreatedEvent:
       type: object
-      description: 'Dasherizes field names on output and un-dasherizes on input.
-
-
-        Apply to nested (non-resource) serializers so their keys match
-
-        the top-level JSON:API dasherized format. Top-level resource
-
-        serializers must NOT use this mixin (the renderer handles them).'
       properties:
-        type:
-          type: string
-          description: JSON:API resource type for this event
-        id:
-          type: string
-          description: ULID event identifier (msg_<base32>), same as the webhook-id header. Stable across delivery retries; dedupe on it.
-        attributes:
-          $ref: '#/components/schemas/ListingRefreshedEventAttributes'
-        relationships:
-          $ref: '#/components/schemas/ListingRefreshedEventRelationships'
+        meta:
+          $ref: '#/components/schemas/_EventMeta'
+        data:
+          $ref: '#/components/schemas/AccountCreatedEventData'
       required:
-      - attributes
-      - id
-      - relationships
-      - type
+      - data
+      - meta
   securitySchemes:
     oauth2:
       type: oauth2
@@ -912,6 +1701,12 @@ components:
             insights:read: Read market insights
             compsets:read: Read competitive set data
             neyoba:ask: Ask Neyoba
+            beyond:read: Read listings, performance, and market data via the Beyond MCP server
+            beyond:write: Modify pricing and listing settings via the Beyond MCP server
+            beyond:skills: Load Beyond revenue-management skills via the Beyond MCP server
+            beyond:usage: Read tool-call history and usage via the Beyond MCP server
+            webhooks:read: Read delivered webhook events
+            webhooks:write: Modify webhook configuration
     personalAccessToken:
       type: http
       scheme: bearer

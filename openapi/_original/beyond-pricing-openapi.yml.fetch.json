@@ -1,0 +1,12 @@
+{
+ "url": "https://developers.beyondpricing.com/api/v1/schema/",
+ "final": "https://developers.beyondpricing.com/api/v1/schema/",
+ "status": 200,
+ "content_type": "application/yaml; charset=utf-8",
+ "bytes": 385445,
+ "sha256": "a1734cd42774e86015bf7e7dabe1f10351c657bf65810337a5b2a3913ecee62f",
+ "fetched_at": "2026-10-19",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "match": "byte-identical",
+ "note": "re-archived: the provider's current document replaced a stale archive (roadmap#793); the old files are in openapi/_superseded/2026-10-19-stale"
+}

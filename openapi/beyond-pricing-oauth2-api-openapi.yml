@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  title: Beyond Pricing Public O Auth2 API
+  title: Beyond O Auth2 API
   version: 2.0.0
   description: Bearer-protected API for third-party integrations. Supports OAuth2 client credentials and personal access tokens. Follows JSON:API specification.
 tags:
@@ -50,7 +50,7 @@ paths:
                   description: Application client secret.
                 scope:
                   type: string
-                  description: 'Space-separated list of scopes. Available: `listings:read`, `listings:write`, `reservations:read`, `accounts:read`, `user:read`, `user:write`, `insights:read`, `compsets:read`, `neyoba:ask`.'
+                  description: 'Space-separated list of scopes. Available: `listings:read`, `listings:write`, `reservations:read`, `accounts:read`, `user:read`, `user:write`, `insights:read`, `compsets:read`, `neyoba:ask`, `beyond:read`, `beyond:write`, `beyond:skills`, `beyond:usage`, `webhooks:read`, `webhooks:write`.'
                 user_id:
                   type: integer
                   description: Bind the token to this user's resources (user-scoped token). Required when the application enforces user-scoped tokens.
@@ -107,6 +107,12 @@ components:
             insights:read: Read market insights
             compsets:read: Read competitive set data
             neyoba:ask: Ask Neyoba
+            beyond:read: Read listings, performance, and market data via the Beyond MCP server
+            beyond:write: Modify pricing and listing settings via the Beyond MCP server
+            beyond:skills: Load Beyond revenue-management skills via the Beyond MCP server
+            beyond:usage: Read tool-call history and usage via the Beyond MCP server
+            webhooks:read: Read delivered webhook events
+            webhooks:write: Modify webhook configuration
     personalAccessToken:
       type: http
       scheme: bearer

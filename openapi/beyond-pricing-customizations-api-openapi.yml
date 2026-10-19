@@ -1,6 +1,6 @@
 openapi: 3.2.0
 info:
-  title: Beyond Pricing Public Customizations API
+  title: Beyond Customizations API
   version: 2.0.0
   description: Bearer-protected API for third-party integrations. Supports OAuth2 client credentials and personal access tokens. Follows JSON:API specification.
 tags:
@@ -29,6 +29,9 @@ paths:
             - min-max-prices
             - min-stays
             - time-based-adjustments
+            - occupancy-based-pricing
+            - checkin-checkout-days
+            - gap-price-adjustments
             - id
         description: endpoint return only specific fields in the response on a per-type basis by including a fields[TYPE] query parameter.
         explode: false
@@ -37,6 +40,8 @@ paths:
       security:
       - oauth2:
         - listings:read
+      - oauth2:
+        - beyond:read
       - personalAccessToken: []
       responses:
         '200':
@@ -143,6 +148,105 @@ paths:
           description: Rate limit exceeded
         '500':
           description: Internal server error
+  /api/v1/listings/{listing_id}/customizations/checkin-checkout-days/:
+    get:
+      operationId: get_listing_checkin_checkout_days_customization
+      description: Retrieve checkin/checkout days customization for a listing.
+      summary: Get checkin/checkout days customization for a listing
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: fields[checkin-checkout-day-customizations]
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - changeover-days-gap-fill-enabled
+            - checkin-days
+            - checkout-days
+            - seasonal-checkin-checkout-days
+            - channel-support
+            - id
+        description: endpoint return only specific fields in the response on a per-type basis by including a fields[TYPE] query parameter.
+        explode: false
+      tags:
+      - Customizations
+      security:
+      - oauth2:
+        - listings:read
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/CheckinCheckoutDaysCustomizationResponse'
+          description: ''
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found - resource does not exist
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+    patch:
+      operationId: patch_listing_checkin_checkout_days_customization
+      description: 'Update checkin/checkout days customization for a listing.
+
+
+        `seasonal-checkin-checkout-days`, when sent, replaces the listing''s
+
+        whole list. Returns 422 when the listing''s channel does not accept
+
+        what was sent; see `channel-support`.'
+      summary: Update checkin/checkout days customization for a listing
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Customizations
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedCheckinCheckoutDaysCustomizationRequest'
+        required: true
+      security:
+      - oauth2:
+        - listings:write
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/CheckinCheckoutDaysCustomizationResponse'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found - resource does not exist
+        '422':
+          description: Unprocessable entity
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
   /api/v1/listings/{listing_id}/customizations/extra-guest-fees/:
     get:
       operationId: get_listing_extra_guest_fee_customization
@@ -217,6 +321,218 @@ paths:
             application/vnd.api+json:
               schema:
                 $ref: '#/components/schemas/ExtraGuestFeeCustomizationResponse'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found - resource does not exist
+        '422':
+          description: Unprocessable entity
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+  /api/v1/listings/{listing_id}/customizations/gap-price-adjustments/:
+    get:
+      operationId: get_listing_gap_price_adjustments_customization
+      description: Retrieve gap price adjustments customization for a listing.
+      summary: Get gap price adjustments customization for a listing
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: fields[gap-price-adjustment-customizations]
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - dynamic-gap-price-adjustments
+            - gap-price-adjustments
+            - is-default
+            - default-gap-price-adjustments
+            - id
+        description: endpoint return only specific fields in the response on a per-type basis by including a fields[TYPE] query parameter.
+        explode: false
+      tags:
+      - Customizations
+      security:
+      - oauth2:
+        - listings:read
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/GapPriceAdjustmentsCustomizationResponse'
+          description: ''
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found - resource does not exist
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+    patch:
+      operationId: patch_listing_gap_price_adjustments_customization
+      description: Update gap price adjustments customization for a listing.
+      summary: Update gap price adjustments customization for a listing
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Customizations
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedGapPriceAdjustmentsCustomizationRequest'
+            examples:
+              SwitchToManualRules:
+                value:
+                  data:
+                    type: gap-price-adjustment-customizations
+                    id: '123'
+                    attributes:
+                      dynamic-gap-price-adjustments:
+                        enabled: false
+                      gap-price-adjustments:
+                      - days: 1
+                        percentage: -29
+                        excluded-days-of-week: []
+                      - days: 2
+                        percentage: 15
+                        excluded-days-of-week:
+                        - friday
+                        - saturday
+                summary: Switch to manual rules
+        required: true
+      security:
+      - oauth2:
+        - listings:write
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/GapPriceAdjustmentsCustomizationResponse'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found - resource does not exist
+        '422':
+          description: Unprocessable entity
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+  /api/v1/listings/{listing_id}/customizations/manual-overrides/:
+    get:
+      operationId: get_listing_manual_overrides_customization
+      description: Retrieve the manual price overrides for a listing.
+      summary: Get manual price overrides for a listing
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: filter[start-date]
+        schema:
+          type: string
+          format: date
+        description: Start date (YYYY-MM-DD). Defaults to today in the listing's timezone.
+      - in: query
+        name: filter[end-date]
+        schema:
+          type: string
+          format: date
+        description: End date (YYYY-MM-DD). Defaults to today + 365 days.
+      - in: query
+        name: fields[manual-override-customizations]
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - overrides
+            - id
+        description: endpoint return only specific fields in the response on a per-type basis by including a fields[TYPE] query parameter.
+        explode: false
+      tags:
+      - Customizations
+      security:
+      - oauth2:
+        - listings:read
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ManualOverridesCustomizationResponse'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found - resource does not exist
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+    patch:
+      operationId: patch_listing_manual_overrides_customization
+      description: Update the manual price overrides for a listing.
+      summary: Update manual price overrides for a listing
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Customizations
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedManualOverridesCustomizationRequest'
+        required: true
+      security:
+      - oauth2:
+        - listings:write
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ManualOverridesCustomizationResponse'
           description: ''
         '400':
           description: Validation error
@@ -421,6 +737,101 @@ paths:
           description: Rate limit exceeded
         '500':
           description: Internal server error
+  /api/v1/listings/{listing_id}/customizations/occupancy-based-pricing/:
+    get:
+      operationId: get_listing_occupancy_based_pricing_customization
+      description: Retrieve occupancy-based pricing customization for a listing.
+      summary: Get occupancy-based pricing customization for a listing
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: fields[occupancy-based-pricing-customizations]
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - enabled
+            - tier
+            - min-factor
+            - max-factor
+            - disabled-periods
+            - id
+        description: endpoint return only specific fields in the response on a per-type basis by including a fields[TYPE] query parameter.
+        explode: false
+      tags:
+      - Customizations
+      security:
+      - oauth2:
+        - listings:read
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/OccupancyBasedPricingCustomizationResponse'
+          description: ''
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found - resource does not exist
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+    patch:
+      operationId: patch_listing_occupancy_based_pricing_customization
+      description: 'Update occupancy-based pricing customization for a listing.
+
+
+        `disabled-periods`, when sent, replaces the listing''s whole list.'
+      summary: Update occupancy-based pricing customization for a listing
+      parameters:
+      - in: path
+        name: listing_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Customizations
+      requestBody:
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/PatchedOccupancyBasedPricingCustomizationRequest'
+        required: true
+      security:
+      - oauth2:
+        - listings:write
+      - personalAccessToken: []
+      responses:
+        '200':
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/OccupancyBasedPricingCustomizationResponse'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized - invalid or missing bearer token
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found - resource does not exist
+        '422':
+          description: Unprocessable entity
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
   /api/v1/listings/{listing_id}/customizations/time-based-adjustments/:
     get:
       operationId: get_listing_time_based_adjustments_customization
@@ -439,10 +850,10 @@ paths:
           items:
             type: string
             enum:
+            - dynamic-time-based-adjustments
             - time-based-adjustments
             - seasonal-time-based-adjustments
             - id
-            - dynamic-time-based-adjustments
         description: endpoint return only specific fields in the response on a per-type basis by including a fields[TYPE] query parameter.
         explode: false
       tags:
@@ -513,6 +924,195 @@ paths:
           description: Internal server error
 components:
   schemas:
+    DynamicTimeBasedAdjustmentsRequest:
+      type: object
+      description: Settings for auto-generated time-based pricing recommendations.
+      properties:
+        enabled:
+          type: boolean
+          description: Whether dynamic time-based adjustments are enabled.
+        tier:
+          allOf:
+          - $ref: '#/components/schemas/TierEnum'
+          description: 'Optimization goal for recommendations. Must be `revenue`, `occupancy`, or `rate`.
+
+
+            * `revenue` - revenue
+
+            * `occupancy` - occupancy
+
+            * `rate` - rate'
+    SeasonalTimeBasedMinStay:
+      type: object
+      description: Lead-time min-stay rules limited to a seasonal date range.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        exclude:
+          type: boolean
+          default: false
+          description: Whether this range excludes seasonal lead-time min-stay rules. An excluding range has no `time-based-min-stays`.
+        time-based-min-stays:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeBasedMinStay'
+          description: Lead-time min-stay rules that apply only within the seasonal range. At least one is required unless `exclude` is true.
+      required:
+      - end-date
+      - start-date
+    TimeBasedAdjustmentsCustomization:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TimeBasedAdjustmentCustomizationResourceTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Customization resource identifier, returned as the listing ID.
+        attributes:
+          type: object
+          properties:
+            dynamic-time-based-adjustments:
+              allOf:
+              - $ref: '#/components/schemas/DynamicTimeBasedAdjustments'
+              description: Settings for Beyond Pricing's generated time-based recommendations.
+            time-based-adjustments:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimeBasedAdjustment'
+              description: Year-round lead-time price adjustments.
+            seasonal-time-based-adjustments:
+              type: array
+              items:
+                $ref: '#/components/schemas/SeasonalTimeBasedAdjustment'
+              description: Lead-time price adjustments limited to seasonal ranges.
+    MinStayCustomizationResourceTypeEnum:
+      type: string
+      enum:
+      - min-stay-customizations
+    SeasonalTimeBasedMinStayRequest:
+      type: object
+      description: Lead-time min-stay rules limited to a seasonal date range.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        exclude:
+          type: boolean
+          default: false
+          description: Whether this range excludes seasonal lead-time min-stay rules. An excluding range has no `time-based-min-stays`.
+        time-based-min-stays:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeBasedMinStayRequest'
+          description: Lead-time min-stay rules that apply only within the seasonal range. At least one is required unless `exclude` is true.
+      required:
+      - end-date
+      - start-date
+    CheckinCheckoutChannelSupportRequest:
+      type: object
+      description: Which check-in and checkout settings the listing's primary channel accepts.
+      properties:
+        checkin-days:
+          type: boolean
+          description: Whether the channel accepts check-in days. When `false`, every update to this customization is rejected.
+        checkout-days:
+          type: boolean
+          description: Whether the channel accepts check-out days separately from check-in days. When `false`, Beyond may replace the check-out days you send with the check-in days.
+        seasonal-checkin-days:
+          type: boolean
+          description: Whether the channel accepts date-specific check-in days. When `false`, `seasonal-checkin-checkout-days` accepts only `[]`.
+        seasonal-checkout-days:
+          type: boolean
+          description: Whether the channel accepts date-specific check-out days.
+        day-selection:
+          allOf:
+          - $ref: '#/components/schemas/Day-selectionEnum'
+          description: '`single`: `checkin-days` and `checkout-days` must each be exactly one weekday or all seven. `multi`: any set of weekdays.
+
+
+            * `single` - single
+
+            * `multi` - multi'
+        seasonal-day-selection:
+          allOf:
+          - $ref: '#/components/schemas/Seasonal-day-selectionEnum'
+          description: 'Same as `day-selection`, for the seasonal day lists.
+
+
+            * `single` - single
+
+            * `multi` - multi'
+        changeover-days-gap-fill:
+          type: boolean
+          description: Whether `changeover-days-gap-fill-enabled` may be set to `true`.
+      required:
+      - changeover-days-gap-fill
+      - checkin-days
+      - checkout-days
+      - day-selection
+      - seasonal-checkin-days
+      - seasonal-checkout-days
+      - seasonal-day-selection
+    SeasonalTimeBasedAdjustment:
+      type: object
+      description: Lead-time price adjustments limited to a seasonal date range.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        time-based-adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeBasedAdjustment'
+          description: Lead-time price adjustments that apply within the seasonal range.
+        exclude:
+          type: boolean
+          default: false
+          description: Whether this range excludes seasonal lead-time price adjustments.
+      required:
+      - end-date
+      - start-date
+    MinMaxPricesCustomizationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/MinMaxPricesCustomization'
+      required:
+      - data
     TierEnum:
       enum:
       - revenue
@@ -524,6 +1124,404 @@ components:
         * `occupancy` - occupancy
 
         * `rate` - rate'
+    CheckinCheckoutDaysCustomization:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/CheckinCheckoutDaysCustomizationTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Customization resource identifier, returned as the listing ID.
+        attributes:
+          type: object
+          properties:
+            changeover-days-gap-fill-enabled:
+              type: boolean
+              description: Whether orphan changeover gaps keep adjacent check-in/checkout rules active.
+            checkin-days:
+              type: array
+              items:
+                enum:
+                - monday
+                - tuesday
+                - wednesday
+                - thursday
+                - friday
+                - saturday
+                - sunday
+                type: string
+                description: '* `monday` - monday
+
+                  * `tuesday` - tuesday
+
+                  * `wednesday` - wednesday
+
+                  * `thursday` - thursday
+
+                  * `friday` - friday
+
+                  * `saturday` - saturday
+
+                  * `sunday` - sunday'
+              description: Weekdays guests are allowed to check in year-round.
+            checkout-days:
+              type: array
+              items:
+                enum:
+                - monday
+                - tuesday
+                - wednesday
+                - thursday
+                - friday
+                - saturday
+                - sunday
+                type: string
+                description: '* `monday` - monday
+
+                  * `tuesday` - tuesday
+
+                  * `wednesday` - wednesday
+
+                  * `thursday` - thursday
+
+                  * `friday` - friday
+
+                  * `saturday` - saturday
+
+                  * `sunday` - sunday'
+              description: Weekdays guests are allowed to check out year-round.
+            seasonal-checkin-checkout-days:
+              type: array
+              items:
+                $ref: '#/components/schemas/SeasonalCheckinCheckoutDays'
+              description: Seasonal check-in and checkout day overrides keyed by date range. A PATCH replaces the whole list; send `[]` to remove every season.
+            channel-support:
+              allOf:
+              - $ref: '#/components/schemas/CheckinCheckoutChannelSupport'
+              readOnly: true
+              description: What the listing's primary channel accepts. Read-only; ignored on update.
+    ListingCustomizations:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/ListingCustomizationResourceTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Customization resource identifier, returned as the listing ID.
+        attributes:
+          type: object
+          properties:
+            base-price:
+              allOf:
+              - $ref: '#/components/schemas/BasePriceCustomizationNested'
+              description: Base price customization, as returned by the base-price endpoint.
+            extra-guest-fees:
+              allOf:
+              - $ref: '#/components/schemas/ExtraGuestFeeCustomizationNested'
+              description: Extra guest fee customization, as returned by the extra-guest-fees endpoint.
+            min-max-prices:
+              allOf:
+              - $ref: '#/components/schemas/MinMaxPricesCustomizationNested'
+              description: Min/max prices customization, as returned by the min-max-prices endpoint.
+            min-stays:
+              allOf:
+              - $ref: '#/components/schemas/MinStaysCustomizationNested'
+              description: Min-stays customization, as returned by the min-stays endpoint.
+            time-based-adjustments:
+              allOf:
+              - $ref: '#/components/schemas/TimeBasedAdjustmentsCustomizationNested'
+              description: Time-based adjustments customization, as returned by the time-based-adjustments endpoint.
+            occupancy-based-pricing:
+              allOf:
+              - $ref: '#/components/schemas/OccupancyBasedPricingCustomizationNested'
+              description: Occupancy-based pricing customization, as returned by the occupancy-based-pricing endpoint.
+            checkin-checkout-days:
+              allOf:
+              - $ref: '#/components/schemas/CheckinCheckoutDaysCustomizationNested'
+              description: Check-in/check-out days customization, as returned by the checkin-checkout-days endpoint.
+            gap-price-adjustments:
+              allOf:
+              - $ref: '#/components/schemas/GapPriceAdjustmentsCustomizationNested'
+              description: Gap price adjustments customization, as returned by the gap-price-adjustments endpoint.
+    OccupancyBasedPricingCustomizationNested:
+      type: object
+      description: Occupancy-based pricing customization nested in the aggregate response.
+      properties:
+        enabled:
+          type: boolean
+          description: Whether Beyond fine-tunes prices from the listing's occupancy compared with its market. The other fields take effect only while this is `true`, but are saved either way.
+        tier:
+          allOf:
+          - $ref: '#/components/schemas/TierEnum'
+          description: 'Strategy for occupancy-based discounts and premiums: `occupancy` favors deeper discounts, `rate` favors stronger premiums, and `revenue` balances both.
+
+
+            * `revenue` - revenue
+
+            * `occupancy` - occupancy
+
+            * `rate` - rate'
+        min-factor:
+          type:
+          - number
+          - 'null'
+          format: double
+          maximum: 0
+          minimum: -1
+          description: Largest decrease occupancy-based pricing may apply, as a fraction between `-1` and `0` (`-0.05` caps decreases at 5%). `0` blocks decreases; `null` means no cap.
+        max-factor:
+          type:
+          - number
+          - 'null'
+          format: double
+          maximum: 1
+          minimum: 0
+          description: Largest increase occupancy-based pricing may apply, as a fraction between `0` and `1` (`0.05` caps increases at 5%). `0` blocks increases; `null` means no cap.
+        disabled-periods:
+          type: array
+          items:
+            $ref: '#/components/schemas/DisabledPeriod'
+          description: Up to 50 non-overlapping date ranges during which occupancy-based pricing is skipped. A PATCH replaces the whole list; send `[]` to remove every period.
+    DayOfWeekMinPrice:
+      type: object
+      description: A nightly minimum-price override for a specific weekday.
+      properties:
+        weekday:
+          allOf:
+          - $ref: '#/components/schemas/WeekdayEnum'
+          description: 'Day of week this override applies to.
+
+
+            * `monday` - monday
+
+            * `tuesday` - tuesday
+
+            * `wednesday` - wednesday
+
+            * `thursday` - thursday
+
+            * `friday` - friday
+
+            * `saturday` - saturday
+
+            * `sunday` - sunday'
+        min-price:
+          type:
+          - integer
+          - 'null'
+          minimum: 5
+          description: Minimum nightly price to use on that weekday.
+      required:
+      - weekday
+    SeasonalDayOfWeekMinStayRequest:
+      type: object
+      description: Weekday-specific minimum stays limited to a date range.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        min-stays:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayOfWeekMinStayRequest'
+          description: Seven weekday entries describing the min stay for each day.
+      required:
+      - end-date
+      - min-stays
+      - start-date
+    SeasonalDayOfWeekMinPrice:
+      type: object
+      description: Weekday-specific nightly minimum prices limited to a date range.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        min-prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayOfWeekMinPrice'
+          description: Seven weekday entries describing the min price for each day.
+      required:
+      - end-date
+      - min-prices
+      - start-date
+    MinMaxPriceCustomizationResourceTypeEnum:
+      type: string
+      enum:
+      - min-max-price-customizations
+    GapPriceAdjustmentsCustomizationNested:
+      type: object
+      description: Gap price adjustments customization nested in the aggregate response.
+      properties:
+        dynamic-gap-price-adjustments:
+          allOf:
+          - $ref: '#/components/schemas/DynamicGapPriceAdjustments'
+          description: Settings for Beyond Pricing's dynamic gap price adjustments.
+        gap-price-adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/GapPriceAdjustment'
+          description: Manual gap price adjustments, applied while dynamic gap price adjustments are disabled. A PATCH replaces the whole list; an empty list removes every rule. While dynamic gap price adjustments are enabled, the rules can be sent only unchanged.
+        is-default:
+          type: boolean
+          readOnly: true
+          description: Whether `gap-price-adjustments` are Beyond's defaults because the listing never saved its own rules. It becomes `false` once the listing saves rules that differ from the defaults, and stays `false` even if the defaults are sent back or every rule is removed.
+        default-gap-price-adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/GapPriceAdjustment'
+          readOnly: true
+          description: Beyond's default manual rules, used until the listing's rules are first changed.
+      required:
+      - default-gap-price-adjustments
+      - is-default
+    BasePriceCustomizationNested:
+      type: object
+      description: Base price customization nested in the aggregate response.
+      properties:
+        base-price:
+          type: integer
+          minimum: 10
+          description: Default nightly base price for the listing. Must be at least 10.
+      required:
+      - base-price
+    MinStaysCustomizationNested:
+      type: object
+      description: Min-stays customization nested in the aggregate response.
+      properties:
+        min-stay:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          description: Default minimum stay, in nights, for the listing.
+        gap-fill-min-stay:
+          allOf:
+          - $ref: '#/components/schemas/GapFillMinStay'
+          description: Year-round orphan-gap min-stay settings.
+        seasonal-min-stays:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalMinStay'
+          description: Seasonal min-stay overrides keyed by date range.
+        last-minute-min-stays:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeBasedMinStay'
+          description: Year-round lead-time min-stay rules.
+        day-of-week-min-stays:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayOfWeekMinStay'
+          description: Year-round minimum stays keyed by weekday.
+        seasonal-day-of-week-min-stays:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalDayOfWeekMinStay'
+          description: Weekday-specific minimum stays limited to seasonal ranges.
+        seasonal-gap-fill-min-stays:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalGapFillMinStay'
+          description: Gap-fill min-stay settings limited to seasonal ranges.
+        seasonal-time-based-min-stays:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalTimeBasedMinStay'
+          description: Lead-time min-stay rules limited to seasonal ranges.
+    ExtraGuestFeeCustomization:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/ExtraGuestFeeCustomizationResourceTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Customization resource identifier, returned as the listing ID.
+        attributes:
+          type: object
+          properties:
+            extra-guest-fee:
+              type:
+              - integer
+              - 'null'
+              minimum: 1
+              description: Per-guest fee charged once the booking exceeds the extra guest threshold.
+            extra-guest-threshold:
+              type:
+              - integer
+              - 'null'
+              minimum: 1
+              description: Number of guests included before the extra guest fee applies.
+          required:
+          - extra-guest-fee
+          - extra-guest-threshold
+    DayOfWeekMinPriceRequest:
+      type: object
+      description: A nightly minimum-price override for a specific weekday.
+      properties:
+        weekday:
+          allOf:
+          - $ref: '#/components/schemas/WeekdayEnum'
+          description: 'Day of week this override applies to.
+
+
+            * `monday` - monday
+
+            * `tuesday` - tuesday
+
+            * `wednesday` - wednesday
+
+            * `thursday` - thursday
+
+            * `friday` - friday
+
+            * `saturday` - saturday
+
+            * `sunday` - sunday'
+        min-price:
+          type:
+          - integer
+          - 'null'
+          minimum: 5
+          description: Minimum nightly price to use on that weekday.
+      required:
+      - weekday
     TimeBasedAdjustmentsCustomizationResponse:
       type: object
       properties:
@@ -531,11 +1529,589 @@ components:
           $ref: '#/components/schemas/TimeBasedAdjustmentsCustomization'
       required:
       - data
-    BasePriceCustomizationResponse:
+    CheckinCheckoutDaysCustomizationNested:
+      type: object
+      description: Check-in/check-out days customization nested in the aggregate response.
+      properties:
+        changeover-days-gap-fill-enabled:
+          type: boolean
+          description: Whether orphan changeover gaps keep adjacent check-in/checkout rules active.
+        checkin-days:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeekdayEnum'
+          description: Weekdays guests are allowed to check in year-round.
+        checkout-days:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeekdayEnum'
+          description: Weekdays guests are allowed to check out year-round.
+        seasonal-checkin-checkout-days:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalCheckinCheckoutDays'
+          description: Seasonal check-in and checkout day overrides keyed by date range. A PATCH replaces the whole list; send `[]` to remove every season.
+        channel-support:
+          allOf:
+          - $ref: '#/components/schemas/CheckinCheckoutChannelSupport'
+          readOnly: true
+          description: What the listing's primary channel accepts. Read-only; ignored on update.
+      required:
+      - channel-support
+    ManualOverrideRequest:
+      type: object
+      description: "A per-date manual price override for a range of dates.\n\nThe two override modes are mutually exclusive on any given date:\n\n* ``price`` pins the nightly price. Beyond's modeled price is discarded for\n  those dates until the override is removed.\n* ``percentage_adjustment`` adjusts the modeled price by a percentage and is\n  applied after every other pricing factor, so the price keeps moving with\n  the model.\n\nA row with neither value clears both overrides for the range."
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the override applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the override applies.
+        days-of-week:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeekdayEnum'
+          description: Restrict the override to these weekdays within the date range. Omit to apply it to every date in the range.
+        price:
+          type:
+          - number
+          - 'null'
+          format: double
+          minimum: 1
+          description: Fixed nightly price for the dates, in the listing's currency. Beyond stops repricing these dates. May be below the listing's minimum price. Mutually exclusive with `percentage-adjustment`.
+        percentage-adjustment:
+          type:
+          - integer
+          - 'null'
+          maximum: 1000
+          minimum: -100
+          description: Percentage applied to Beyond's modeled price, where `10` means +10% and `-10` means -10%. The price keeps fluctuating with the model. Mutually exclusive with `price`.
+      required:
+      - end-date
+      - start-date
+    OccupancyBasedPricingCustomizationResponse:
       type: object
       properties:
         data:
-          $ref: '#/components/schemas/BasePriceCustomization'
+          $ref: '#/components/schemas/OccupancyBasedPricingCustomization'
+      required:
+      - data
+    BasePriceCustomizationTypeEnum:
+      type: string
+      enum:
+      - base-price-customizations
+    SeasonalPricesRequest:
+      type: object
+      description: A date-scoped nightly min/max price override.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        min-price:
+          type:
+          - number
+          - 'null'
+          format: double
+          minimum: 5
+          description: Minimum nightly price for the seasonal range.
+        max-price:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Maximum nightly price for the seasonal range.
+      required:
+      - end-date
+      - start-date
+    GapFillMinStayRequest:
+      type: object
+      description: Gap-fill settings used to raise min stays around short orphan gaps.
+      properties:
+        enabled:
+          type: boolean
+          description: Whether orphan-gap min-stay protection is enabled.
+        gaps:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          description: Maximum orphan-gap length, in nights, that should trigger the rule.
+        buffer:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+          description: Extra nights around the gap that still count toward the rule.
+    SeasonalMonthlyPricesRequest:
+      type: object
+      description: A date-scoped monthly min/max price override.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        monthly-min-price:
+          type:
+          - number
+          - 'null'
+          format: double
+          minimum: 5
+          description: Minimum monthly price for the seasonal range.
+        monthly-max-price:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Maximum monthly price for the seasonal range.
+      required:
+      - end-date
+      - start-date
+    DayOfWeekMinStayRequest:
+      type: object
+      description: A minimum-stay override for a specific weekday.
+      properties:
+        weekday:
+          allOf:
+          - $ref: '#/components/schemas/WeekdayEnum'
+          description: 'Day of week this override applies to.
+
+
+            * `monday` - monday
+
+            * `tuesday` - tuesday
+
+            * `wednesday` - wednesday
+
+            * `thursday` - thursday
+
+            * `friday` - friday
+
+            * `saturday` - saturday
+
+            * `sunday` - sunday'
+        min-stay:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          description: Minimum stay, in nights, to require on that weekday.
+      required:
+      - weekday
+    DayOfWeekMinStay:
+      type: object
+      description: A minimum-stay override for a specific weekday.
+      properties:
+        weekday:
+          allOf:
+          - $ref: '#/components/schemas/WeekdayEnum'
+          description: 'Day of week this override applies to.
+
+
+            * `monday` - monday
+
+            * `tuesday` - tuesday
+
+            * `wednesday` - wednesday
+
+            * `thursday` - thursday
+
+            * `friday` - friday
+
+            * `saturday` - saturday
+
+            * `sunday` - sunday'
+        min-stay:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          description: Minimum stay, in nights, to require on that weekday.
+      required:
+      - weekday
+    PatchedTimeBasedAdjustmentsCustomizationRequest:
+      type: object
+      properties:
+        data:
+          type: object
+          required:
+          - type
+          - id
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+              enum:
+              - time-based-adjustment-customizations
+            id:
+              type: string
+              minLength: 1
+              description: Customization resource identifier, returned as the listing ID.
+            attributes:
+              type: object
+              properties:
+                dynamic-time-based-adjustments:
+                  allOf:
+                  - $ref: '#/components/schemas/DynamicTimeBasedAdjustmentsRequest'
+                  description: Settings for Beyond Pricing's generated time-based recommendations.
+                time-based-adjustments:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TimeBasedAdjustmentRequest'
+                  description: Year-round lead-time price adjustments.
+                seasonal-time-based-adjustments:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SeasonalTimeBasedAdjustmentRequest'
+                  description: Lead-time price adjustments limited to seasonal ranges.
+      required:
+      - data
+    PatchedCheckinCheckoutDaysCustomizationRequest:
+      type: object
+      properties:
+        data:
+          type: object
+          required:
+          - type
+          - id
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+              enum:
+              - checkin-checkout-day-customizations
+            id:
+              type: string
+              minLength: 1
+              description: Customization resource identifier, returned as the listing ID.
+            attributes:
+              type: object
+              properties:
+                changeover-days-gap-fill-enabled:
+                  type: boolean
+                  description: Whether orphan changeover gaps keep adjacent check-in/checkout rules active.
+                checkin-days:
+                  type: array
+                  items:
+                    enum:
+                    - monday
+                    - tuesday
+                    - wednesday
+                    - thursday
+                    - friday
+                    - saturday
+                    - sunday
+                    type: string
+                    description: '* `monday` - monday
+
+                      * `tuesday` - tuesday
+
+                      * `wednesday` - wednesday
+
+                      * `thursday` - thursday
+
+                      * `friday` - friday
+
+                      * `saturday` - saturday
+
+                      * `sunday` - sunday'
+                  description: Weekdays guests are allowed to check in year-round.
+                checkout-days:
+                  type: array
+                  items:
+                    enum:
+                    - monday
+                    - tuesday
+                    - wednesday
+                    - thursday
+                    - friday
+                    - saturday
+                    - sunday
+                    type: string
+                    description: '* `monday` - monday
+
+                      * `tuesday` - tuesday
+
+                      * `wednesday` - wednesday
+
+                      * `thursday` - thursday
+
+                      * `friday` - friday
+
+                      * `saturday` - saturday
+
+                      * `sunday` - sunday'
+                  description: Weekdays guests are allowed to check out year-round.
+                seasonal-checkin-checkout-days:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SeasonalCheckinCheckoutDaysRequest'
+                  description: Seasonal check-in and checkout day overrides keyed by date range. A PATCH replaces the whole list; send `[]` to remove every season.
+                channel-support:
+                  allOf:
+                  - $ref: '#/components/schemas/CheckinCheckoutChannelSupportRequest'
+                  readOnly: true
+                  description: What the listing's primary channel accepts. Read-only; ignored on update.
+      required:
+      - data
+    TimeBasedMinStayRequest:
+      type: object
+      description: A lead-time-based minimum-stay rule.
+      properties:
+        days-away:
+          type: integer
+          minimum: 1
+          description: Lead-time threshold, in days, that triggers the rule.
+        direction:
+          allOf:
+          - $ref: '#/components/schemas/DirectionEnum'
+          description: 'How to count the lead-time threshold: `within` for bookings within N days, `after` for bookings N or more days away.
+
+
+            * `within` - within
+
+            * `after` - after'
+        min-stay:
+          type: integer
+          minimum: 1
+          description: Minimum stay, in nights, to require when the rule matches.
+      required:
+      - days-away
+      - direction
+      - min-stay
+    CheckinCheckoutDaysCustomizationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CheckinCheckoutDaysCustomization'
+      required:
+      - data
+    Day-selectionEnum:
+      enum:
+      - single
+      - multi
+      type: string
+      description: '* `single` - single
+
+        * `multi` - multi'
+    BasePriceCustomization:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/BasePriceCustomizationTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Customization resource identifier, returned as the listing ID.
+        attributes:
+          type: object
+          properties:
+            base-price:
+              type: integer
+              minimum: 10
+              description: Default nightly base price for the listing. Must be at least 10.
+          required:
+          - base-price
+    ListingCustomizationResourceTypeEnum:
+      type: string
+      enum:
+      - listing-customizations
+    SeasonalCheckinCheckoutDays:
+      type: object
+      description: Check-in and checkout day restrictions limited to a seasonal date range.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        checkin-days:
+          type:
+          - array
+          - 'null'
+          items:
+            enum:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+            type: string
+            description: '* `monday` - monday
+
+              * `tuesday` - tuesday
+
+              * `wednesday` - wednesday
+
+              * `thursday` - thursday
+
+              * `friday` - friday
+
+              * `saturday` - saturday
+
+              * `sunday` - sunday'
+          description: Weekdays guests are allowed to check in during the seasonal range, or `null` to keep the year-round `checkin-days`. A `GET` returns `[]` when the season blocks every check-in; a `PATCH` cannot send `[]`.
+        checkout-days:
+          type:
+          - array
+          - 'null'
+          items:
+            enum:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+            type: string
+            description: '* `monday` - monday
+
+              * `tuesday` - tuesday
+
+              * `wednesday` - wednesday
+
+              * `thursday` - thursday
+
+              * `friday` - friday
+
+              * `saturday` - saturday
+
+              * `sunday` - sunday'
+          description: Weekdays guests are allowed to check out during the seasonal range, or `null` to keep the year-round `checkout-days`. A `GET` returns `[]` when the season blocks every checkout; a `PATCH` cannot send `[]`.
+      required:
+      - end-date
+      - start-date
+    DynamicTimeBasedAdjustments:
+      type: object
+      description: Settings for auto-generated time-based pricing recommendations.
+      properties:
+        enabled:
+          type: boolean
+          description: Whether dynamic time-based adjustments are enabled.
+        tier:
+          allOf:
+          - $ref: '#/components/schemas/TierEnum'
+          description: 'Optimization goal for recommendations. Must be `revenue`, `occupancy`, or `rate`.
+
+
+            * `revenue` - revenue
+
+            * `occupancy` - occupancy
+
+            * `rate` - rate'
+        median-lead-time:
+          type:
+          - integer
+          - 'null'
+          readOnly: true
+          description: 'Median number of days between booking and arrival for listings of similar size in the listing''s neighborhood, or null when Beyond has no estimate. Read-only: ignored on PATCH.'
+      required:
+      - median-lead-time
+    SeasonalMinStayRequest:
+      type: object
+      description: A date-scoped minimum-stay override.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        min-stay:
+          type: integer
+          minimum: 1
+          description: Minimum required stay, in nights, for the seasonal range.
+        min-stay-locked:
+          type: boolean
+          default: false
+          description: Whether this seasonal min stay is locked against automatic changes.
+      required:
+      - end-date
+      - min-stay
+      - start-date
+    PatchedGapPriceAdjustmentsCustomizationRequest:
+      type: object
+      properties:
+        data:
+          type: object
+          required:
+          - type
+          - id
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+              enum:
+              - gap-price-adjustment-customizations
+            id:
+              type: string
+              minLength: 1
+              description: Customization resource identifier, returned as the listing ID.
+            attributes:
+              type: object
+              properties:
+                dynamic-gap-price-adjustments:
+                  allOf:
+                  - $ref: '#/components/schemas/DynamicGapPriceAdjustmentsRequest'
+                  description: Settings for Beyond Pricing's dynamic gap price adjustments.
+                gap-price-adjustments:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/GapPriceAdjustmentRequest'
+                  description: Manual gap price adjustments, applied while dynamic gap price adjustments are disabled. A PATCH replaces the whole list; an empty list removes every rule. While dynamic gap price adjustments are enabled, the rules can be sent only unchanged.
+                is-default:
+                  type: boolean
+                  readOnly: true
+                  description: Whether `gap-price-adjustments` are Beyond's defaults because the listing never saved its own rules. It becomes `false` once the listing saves rules that differ from the defaults, and stays `false` even if the defaults are sent back or every rule is removed.
+                default-gap-price-adjustments:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/GapPriceAdjustmentRequest'
+                  readOnly: true
+                  description: Beyond's default manual rules, used until the listing's rules are first changed.
       required:
       - data
     MinMaxPricesCustomization:
@@ -549,7 +2125,9 @@ components:
           allOf:
           - $ref: '#/components/schemas/MinMaxPriceCustomizationResourceTypeEnum'
           description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
-        id: {}
+        id:
+          type: string
+          description: Customization resource identifier, returned as the listing ID.
         attributes:
           type: object
           properties:
@@ -593,6 +2171,177 @@ components:
               items:
                 $ref: '#/components/schemas/SeasonalMonthlyPrices'
               description: Seasonal monthly min/max price overrides.
+    PatchedMinStaysCustomizationRequest:
+      type: object
+      properties:
+        data:
+          type: object
+          required:
+          - type
+          - id
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+              enum:
+              - min-stay-customizations
+            id:
+              type: string
+              minLength: 1
+              description: Customization resource identifier, returned as the listing ID.
+            attributes:
+              type: object
+              properties:
+                min-stay:
+                  type:
+                  - integer
+                  - 'null'
+                  minimum: 1
+                  description: Default minimum stay, in nights, for the listing.
+                gap-fill-min-stay:
+                  allOf:
+                  - $ref: '#/components/schemas/GapFillMinStayRequest'
+                  description: Year-round orphan-gap min-stay settings.
+                seasonal-min-stays:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SeasonalMinStayRequest'
+                  description: Seasonal min-stay overrides keyed by date range.
+                last-minute-min-stays:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TimeBasedMinStayRequest'
+                  description: Year-round lead-time min-stay rules.
+                day-of-week-min-stays:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DayOfWeekMinStayRequest'
+                  description: Year-round minimum stays keyed by weekday.
+                seasonal-day-of-week-min-stays:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SeasonalDayOfWeekMinStayRequest'
+                  description: Weekday-specific minimum stays limited to seasonal ranges.
+                seasonal-gap-fill-min-stays:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SeasonalGapFillMinStayRequest'
+                  description: Gap-fill min-stay settings limited to seasonal ranges.
+                seasonal-time-based-min-stays:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SeasonalTimeBasedMinStayRequest'
+                  description: Lead-time min-stay rules limited to seasonal ranges.
+      required:
+      - data
+    TimeBasedAdjustment:
+      type: object
+      description: A lead-time-based price adjustment rule.
+      properties:
+        days:
+          type: integer
+          minimum: 1
+          description: Lead-time threshold, in days, that triggers the adjustment.
+        percentage:
+          type: integer
+          maximum: 100
+          description: Adjustment percent, where 20 means +20% and -20 means -20%.
+        direction:
+          allOf:
+          - $ref: '#/components/schemas/DirectionEnum'
+          description: 'How to count the lead-time threshold: `within` for bookings within N days, `after` for bookings N or more days away.
+
+
+            * `within` - within
+
+            * `after` - after'
+      required:
+      - days
+      - direction
+      - percentage
+    DirectionEnum:
+      enum:
+      - within
+      - after
+      type: string
+      description: '* `within` - within
+
+        * `after` - after'
+    ExtraGuestFeeCustomizationNested:
+      type: object
+      description: Extra guest fee customization nested in the aggregate response.
+      properties:
+        extra-guest-fee:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          description: Per-guest fee charged once the booking exceeds the extra guest threshold.
+        extra-guest-threshold:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          description: Number of guests included before the extra guest fee applies.
+      required:
+      - extra-guest-fee
+      - extra-guest-threshold
+    OccupancyBasedPricingCustomization:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/OccupancyBasedPricingCustomizationTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Customization resource identifier, returned as the listing ID.
+        attributes:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              description: Whether Beyond fine-tunes prices from the listing's occupancy compared with its market. The other fields take effect only while this is `true`, but are saved either way.
+            tier:
+              enum:
+              - revenue
+              - occupancy
+              - rate
+              type: string
+              description: 'Strategy for occupancy-based discounts and premiums: `occupancy` favors deeper discounts, `rate` favors stronger premiums, and `revenue` balances both.
+
+
+                * `revenue` - revenue
+
+                * `occupancy` - occupancy
+
+                * `rate` - rate'
+            min-factor:
+              type:
+              - number
+              - 'null'
+              format: double
+              maximum: 0
+              minimum: -1
+              description: Largest decrease occupancy-based pricing may apply, as a fraction between `-1` and `0` (`-0.05` caps decreases at 5%). `0` blocks decreases; `null` means no cap.
+            max-factor:
+              type:
+              - number
+              - 'null'
+              format: double
+              maximum: 1
+              minimum: 0
+              description: Largest increase occupancy-based pricing may apply, as a fraction between `0` and `1` (`0.05` caps increases at 5%). `0` blocks increases; `null` means no cap.
+            disabled-periods:
+              type: array
+              items:
+                $ref: '#/components/schemas/DisabledPeriod'
+              description: Up to 50 non-overlapping date ranges during which occupancy-based pricing is skipped. A PATCH replaces the whole list; send `[]` to remove every period.
     PatchedBasePriceCustomizationRequest:
       type: object
       properties:
@@ -608,7 +2357,10 @@ components:
               description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
               enum:
               - base-price-customizations
-            id: {}
+            id:
+              type: string
+              minLength: 1
+              description: Customization resource identifier, returned as the listing ID.
             attributes:
               type: object
               properties:
@@ -616,16 +2368,893 @@ components:
                   type: integer
                   minimum: 10
                   description: Default nightly base price for the listing. Must be at least 10.
-                id:
-                  type: string
-                  readOnly: true
-                  minLength: 1
-                  description: Customization resource identifier, returned as the listing ID.
               required:
               - base-price
       required:
       - data
-    SeasonalDayOfWeekMinStayRequest:
+    DynamicGapPriceAdjustments:
+      type: object
+      description: Whether Beyond sets the gap price adjustments from market booking trends.
+      properties:
+        enabled:
+          type: boolean
+          description: 'Whether dynamic gap price adjustments are enabled. While enabled, Beyond adjusts gaps of up to 3 nights from market booking trends and `gap-price-adjustments` are not applied. Only available in some markets: elsewhere, enabling is ignored and this stays `false`.'
+      required:
+      - enabled
+    BasePriceCustomizationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/BasePriceCustomization'
+      required:
+      - data
+    TimeBasedAdjustmentsCustomizationNested:
+      type: object
+      description: Time-based adjustments customization nested in the aggregate response.
+      properties:
+        dynamic-time-based-adjustments:
+          allOf:
+          - $ref: '#/components/schemas/DynamicTimeBasedAdjustments'
+          description: Settings for Beyond Pricing's generated time-based recommendations.
+        time-based-adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeBasedAdjustment'
+          description: Year-round lead-time price adjustments.
+        seasonal-time-based-adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeasonalTimeBasedAdjustment'
+          description: Lead-time price adjustments limited to seasonal ranges.
+    PatchedExtraGuestFeeCustomizationRequest:
+      type: object
+      properties:
+        data:
+          type: object
+          required:
+          - type
+          - id
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+              enum:
+              - extra-guest-fee-customizations
+            id:
+              type: string
+              minLength: 1
+              description: Customization resource identifier, returned as the listing ID.
+            attributes:
+              type: object
+              properties:
+                extra-guest-fee:
+                  type:
+                  - integer
+                  - 'null'
+                  minimum: 1
+                  description: Per-guest fee charged once the booking exceeds the extra guest threshold.
+                extra-guest-threshold:
+                  type:
+                  - integer
+                  - 'null'
+                  minimum: 1
+                  description: Number of guests included before the extra guest fee applies.
+              required:
+              - extra-guest-fee
+              - extra-guest-threshold
+      required:
+      - data
+    ExtraGuestFeeCustomizationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ExtraGuestFeeCustomization'
+      required:
+      - data
+    ManualOverride:
+      type: object
+      description: "A per-date manual price override for a range of dates.\n\nThe two override modes are mutually exclusive on any given date:\n\n* ``price`` pins the nightly price. Beyond's modeled price is discarded for\n  those dates until the override is removed.\n* ``percentage_adjustment`` adjusts the modeled price by a percentage and is\n  applied after every other pricing factor, so the price keeps moving with\n  the model.\n\nA row with neither value clears both overrides for the range."
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the override applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the override applies.
+        days-of-week:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeekdayEnum'
+          description: Restrict the override to these weekdays within the date range. Omit to apply it to every date in the range.
+        price:
+          type:
+          - number
+          - 'null'
+          format: double
+          minimum: 1
+          description: Fixed nightly price for the dates, in the listing's currency. Beyond stops repricing these dates. May be below the listing's minimum price. Mutually exclusive with `percentage-adjustment`.
+        percentage-adjustment:
+          type:
+          - integer
+          - 'null'
+          maximum: 1000
+          minimum: -100
+          description: Percentage applied to Beyond's modeled price, where `10` means +10% and `-10` means -10%. The price keeps fluctuating with the model. Mutually exclusive with `price`.
+      required:
+      - end-date
+      - start-date
+    SeasonalDayOfWeekMinPriceRequest:
+      type: object
+      description: Weekday-specific nightly minimum prices limited to a date range.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        min-prices:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayOfWeekMinPriceRequest'
+          description: Seven weekday entries describing the min price for each day.
+      required:
+      - end-date
+      - min-prices
+      - start-date
+    GapPriceAdjustmentsCustomizationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/GapPriceAdjustmentsCustomization'
+      required:
+      - data
+    GapPriceAdjustmentsCustomizationTypeEnum:
+      type: string
+      enum:
+      - gap-price-adjustment-customizations
+    SeasonalMonthlyPrices:
+      type: object
+      description: A date-scoped monthly min/max price override.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        monthly-min-price:
+          type:
+          - number
+          - 'null'
+          format: double
+          minimum: 5
+          description: Minimum monthly price for the seasonal range.
+        monthly-max-price:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Maximum monthly price for the seasonal range.
+      required:
+      - end-date
+      - start-date
+    Seasonal-day-selectionEnum:
+      enum:
+      - single
+      - multi
+      type: string
+      description: '* `single` - single
+
+        * `multi` - multi'
+    MinStaysCustomization:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/MinStayCustomizationResourceTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Customization resource identifier, returned as the listing ID.
+        attributes:
+          type: object
+          properties:
+            min-stay:
+              type:
+              - integer
+              - 'null'
+              minimum: 1
+              description: Default minimum stay, in nights, for the listing.
+            gap-fill-min-stay:
+              allOf:
+              - $ref: '#/components/schemas/GapFillMinStay'
+              description: Year-round orphan-gap min-stay settings.
+            seasonal-min-stays:
+              type: array
+              items:
+                $ref: '#/components/schemas/SeasonalMinStay'
+              description: Seasonal min-stay overrides keyed by date range.
+            last-minute-min-stays:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimeBasedMinStay'
+              description: Year-round lead-time min-stay rules.
+            day-of-week-min-stays:
+              type: array
+              items:
+                $ref: '#/components/schemas/DayOfWeekMinStay'
+              description: Year-round minimum stays keyed by weekday.
+            seasonal-day-of-week-min-stays:
+              type: array
+              items:
+                $ref: '#/components/schemas/SeasonalDayOfWeekMinStay'
+              description: Weekday-specific minimum stays limited to seasonal ranges.
+            seasonal-gap-fill-min-stays:
+              type: array
+              items:
+                $ref: '#/components/schemas/SeasonalGapFillMinStay'
+              description: Gap-fill min-stay settings limited to seasonal ranges.
+            seasonal-time-based-min-stays:
+              type: array
+              items:
+                $ref: '#/components/schemas/SeasonalTimeBasedMinStay'
+              description: Lead-time min-stay rules limited to seasonal ranges.
+    ManualOverridesCustomizationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ManualOverridesCustomization'
+      required:
+      - data
+    DisabledPeriod:
+      type: object
+      description: A date range during which occupancy-based pricing is skipped.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date occupancy-based pricing is skipped.
+        end-date:
+          type: string
+          format: date
+          description: Last date occupancy-based pricing is skipped.
+      required:
+      - end-date
+      - start-date
+    GapFillMinStay:
+      type: object
+      description: Gap-fill settings used to raise min stays around short orphan gaps.
+      properties:
+        enabled:
+          type: boolean
+          description: Whether orphan-gap min-stay protection is enabled.
+        gaps:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          description: Maximum orphan-gap length, in nights, that should trigger the rule.
+        buffer:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+          description: Extra nights around the gap that still count toward the rule.
+    SeasonalGapFillMinStay:
+      type: object
+      description: Gap-fill min-stay settings limited to a seasonal date range.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        gap-fill-min-stay:
+          allOf:
+          - $ref: '#/components/schemas/GapFillMinStay'
+          description: Gap-fill settings to apply within the seasonal range.
+      required:
+      - end-date
+      - gap-fill-min-stay
+      - start-date
+    ManualOverridesCustomization:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/ManualOverrideCustomizationResourceTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Customization resource identifier, returned as the listing ID.
+        attributes:
+          type: object
+          properties:
+            overrides:
+              type: array
+              items:
+                $ref: '#/components/schemas/ManualOverride'
+              description: Manual price overrides keyed by date range.
+          required:
+          - overrides
+    GapPriceAdjustmentsCustomization:
+      type: object
+      required:
+      - type
+      - id
+      additionalProperties: false
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/GapPriceAdjustmentsCustomizationTypeEnum'
+          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+        id:
+          type: string
+          description: Customization resource identifier, returned as the listing ID.
+        attributes:
+          type: object
+          properties:
+            dynamic-gap-price-adjustments:
+              allOf:
+              - $ref: '#/components/schemas/DynamicGapPriceAdjustments'
+              description: Settings for Beyond Pricing's dynamic gap price adjustments.
+            gap-price-adjustments:
+              type: array
+              items:
+                $ref: '#/components/schemas/GapPriceAdjustment'
+              description: Manual gap price adjustments, applied while dynamic gap price adjustments are disabled. A PATCH replaces the whole list; an empty list removes every rule. While dynamic gap price adjustments are enabled, the rules can be sent only unchanged.
+            is-default:
+              type: boolean
+              readOnly: true
+              description: Whether `gap-price-adjustments` are Beyond's defaults because the listing never saved its own rules. It becomes `false` once the listing saves rules that differ from the defaults, and stays `false` even if the defaults are sent back or every rule is removed.
+            default-gap-price-adjustments:
+              type: array
+              items:
+                $ref: '#/components/schemas/GapPriceAdjustment'
+              readOnly: true
+              description: Beyond's default manual rules, used until the listing's rules are first changed.
+    ExtraGuestFeeCustomizationResourceTypeEnum:
+      type: string
+      enum:
+      - extra-guest-fee-customizations
+    TimeBasedMinStay:
+      type: object
+      description: A lead-time-based minimum-stay rule.
+      properties:
+        days-away:
+          type: integer
+          minimum: 1
+          description: Lead-time threshold, in days, that triggers the rule.
+        direction:
+          allOf:
+          - $ref: '#/components/schemas/DirectionEnum'
+          description: 'How to count the lead-time threshold: `within` for bookings within N days, `after` for bookings N or more days away.
+
+
+            * `within` - within
+
+            * `after` - after'
+        min-stay:
+          type: integer
+          minimum: 1
+          description: Minimum stay, in nights, to require when the rule matches.
+      required:
+      - days-away
+      - direction
+      - min-stay
+    GapPriceAdjustment:
+      type: object
+      description: A price adjustment for the nights of an open gap between two bookings.
+      properties:
+        days:
+          type: integer
+          maximum: 32767
+          minimum: 1
+          description: Length of the gap, in nights, the rule applies to.
+        percentage:
+          type: integer
+          maximum: 999
+          minimum: -99
+          description: Adjustment percent applied to each night of the gap, where -30 means -30% and 10 means +10%. Must not be 0.
+        excluded-days-of-week:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeekdayEnum'
+          description: 'Weekdays the rule skips: gap nights falling on them keep their unadjusted price. Omit to adjust every night of the gap.'
+      required:
+      - days
+      - percentage
+    DisabledPeriodRequest:
+      type: object
+      description: A date range during which occupancy-based pricing is skipped.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date occupancy-based pricing is skipped.
+        end-date:
+          type: string
+          format: date
+          description: Last date occupancy-based pricing is skipped.
+      required:
+      - end-date
+      - start-date
+    TimeBasedAdjustmentRequest:
+      type: object
+      description: A lead-time-based price adjustment rule.
+      properties:
+        days:
+          type: integer
+          minimum: 1
+          description: Lead-time threshold, in days, that triggers the adjustment.
+        percentage:
+          type: integer
+          maximum: 100
+          description: Adjustment percent, where 20 means +20% and -20 means -20%.
+        direction:
+          allOf:
+          - $ref: '#/components/schemas/DirectionEnum'
+          description: 'How to count the lead-time threshold: `within` for bookings within N days, `after` for bookings N or more days away.
+
+
+            * `within` - within
+
+            * `after` - after'
+      required:
+      - days
+      - direction
+      - percentage
+    SeasonalGapFillMinStayRequest:
+      type: object
+      description: Gap-fill min-stay settings limited to a seasonal date range.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        gap-fill-min-stay:
+          allOf:
+          - $ref: '#/components/schemas/GapFillMinStayRequest'
+          description: Gap-fill settings to apply within the seasonal range.
+      required:
+      - end-date
+      - gap-fill-min-stay
+      - start-date
+    GapPriceAdjustmentRequest:
+      type: object
+      description: A price adjustment for the nights of an open gap between two bookings.
+      properties:
+        days:
+          type: integer
+          maximum: 32767
+          minimum: 1
+          description: Length of the gap, in nights, the rule applies to.
+        percentage:
+          type: integer
+          maximum: 999
+          minimum: -99
+          description: Adjustment percent applied to each night of the gap, where -30 means -30% and 10 means +10%. Must not be 0.
+        excluded-days-of-week:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeekdayEnum'
+          description: 'Weekdays the rule skips: gap nights falling on them keep their unadjusted price. Omit to adjust every night of the gap.'
+      required:
+      - days
+      - percentage
+    ManualOverrideCustomizationResourceTypeEnum:
+      type: string
+      enum:
+      - manual-override-customizations
+    SeasonalMinStay:
+      type: object
+      description: A date-scoped minimum-stay override.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        min-stay:
+          type: integer
+          minimum: 1
+          description: Minimum required stay, in nights, for the seasonal range.
+        min-stay-locked:
+          type: boolean
+          default: false
+          description: Whether this seasonal min stay is locked against automatic changes.
+      required:
+      - end-date
+      - min-stay
+      - start-date
+    CheckinCheckoutChannelSupport:
+      type: object
+      description: Which check-in and checkout settings the listing's primary channel accepts.
+      properties:
+        checkin-days:
+          type: boolean
+          description: Whether the channel accepts check-in days. When `false`, every update to this customization is rejected.
+        checkout-days:
+          type: boolean
+          description: Whether the channel accepts check-out days separately from check-in days. When `false`, Beyond may replace the check-out days you send with the check-in days.
+        seasonal-checkin-days:
+          type: boolean
+          description: Whether the channel accepts date-specific check-in days. When `false`, `seasonal-checkin-checkout-days` accepts only `[]`.
+        seasonal-checkout-days:
+          type: boolean
+          description: Whether the channel accepts date-specific check-out days.
+        day-selection:
+          allOf:
+          - $ref: '#/components/schemas/Day-selectionEnum'
+          description: '`single`: `checkin-days` and `checkout-days` must each be exactly one weekday or all seven. `multi`: any set of weekdays.
+
+
+            * `single` - single
+
+            * `multi` - multi'
+        seasonal-day-selection:
+          allOf:
+          - $ref: '#/components/schemas/Seasonal-day-selectionEnum'
+          description: 'Same as `day-selection`, for the seasonal day lists.
+
+
+            * `single` - single
+
+            * `multi` - multi'
+        changeover-days-gap-fill:
+          type: boolean
+          description: Whether `changeover-days-gap-fill-enabled` may be set to `true`.
+      required:
+      - changeover-days-gap-fill
+      - checkin-days
+      - checkout-days
+      - day-selection
+      - seasonal-checkin-days
+      - seasonal-checkout-days
+      - seasonal-day-selection
+    TimeBasedAdjustmentCustomizationResourceTypeEnum:
+      type: string
+      enum:
+      - time-based-adjustment-customizations
+    PatchedOccupancyBasedPricingCustomizationRequest:
+      type: object
+      properties:
+        data:
+          type: object
+          required:
+          - type
+          - id
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+              enum:
+              - occupancy-based-pricing-customizations
+            id:
+              type: string
+              minLength: 1
+              description: Customization resource identifier, returned as the listing ID.
+            attributes:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                  description: Whether Beyond fine-tunes prices from the listing's occupancy compared with its market. The other fields take effect only while this is `true`, but are saved either way.
+                tier:
+                  enum:
+                  - revenue
+                  - occupancy
+                  - rate
+                  type: string
+                  description: 'Strategy for occupancy-based discounts and premiums: `occupancy` favors deeper discounts, `rate` favors stronger premiums, and `revenue` balances both.
+
+
+                    * `revenue` - revenue
+
+                    * `occupancy` - occupancy
+
+                    * `rate` - rate'
+                min-factor:
+                  type:
+                  - number
+                  - 'null'
+                  format: double
+                  maximum: 0
+                  minimum: -1
+                  description: Largest decrease occupancy-based pricing may apply, as a fraction between `-1` and `0` (`-0.05` caps decreases at 5%). `0` blocks decreases; `null` means no cap.
+                max-factor:
+                  type:
+                  - number
+                  - 'null'
+                  format: double
+                  maximum: 1
+                  minimum: 0
+                  description: Largest increase occupancy-based pricing may apply, as a fraction between `0` and `1` (`0.05` caps increases at 5%). `0` blocks increases; `null` means no cap.
+                disabled-periods:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DisabledPeriodRequest'
+                  description: Up to 50 non-overlapping date ranges during which occupancy-based pricing is skipped. A PATCH replaces the whole list; send `[]` to remove every period.
+      required:
+      - data
+    SeasonalTimeBasedAdjustmentRequest:
+      type: object
+      description: Lead-time price adjustments limited to a seasonal date range.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        time-based-adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeBasedAdjustmentRequest'
+          description: Lead-time price adjustments that apply within the seasonal range.
+        exclude:
+          type: boolean
+          default: false
+          description: Whether this range excludes seasonal lead-time price adjustments.
+      required:
+      - end-date
+      - start-date
+    ListingCustomizationsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ListingCustomizations'
+      required:
+      - data
+    SeasonalPrices:
+      type: object
+      description: A date-scoped nightly min/max price override.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        min-price:
+          type:
+          - number
+          - 'null'
+          format: double
+          minimum: 5
+          description: Minimum nightly price for the seasonal range.
+        max-price:
+          type:
+          - number
+          - 'null'
+          format: double
+          description: Maximum nightly price for the seasonal range.
+      required:
+      - end-date
+      - start-date
+    MinStaysCustomizationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/MinStaysCustomization'
+      required:
+      - data
+    PatchedMinMaxPricesCustomizationRequest:
+      type: object
+      properties:
+        data:
+          type: object
+          required:
+          - type
+          - id
+          additionalProperties: false
+          properties:
+            type:
+              type: string
+              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
+              enum:
+              - min-max-price-customizations
+            id:
+              type: string
+              minLength: 1
+              description: Customization resource identifier, returned as the listing ID.
+            attributes:
+              type: object
+              properties:
+                min-price:
+                  type:
+                  - number
+                  - 'null'
+                  format: double
+                  minimum: 5
+                  description: Default minimum nightly price for the listing.
+                max-price:
+                  type:
+                  - number
+                  - 'null'
+                  format: double
+                  description: Default maximum nightly price for the listing.
+                monthly-min-price:
+                  type:
+                  - number
+                  - 'null'
+                  format: double
+                  minimum: 5
+                  description: Default minimum monthly price for the listing.
+                day-of-week-min-prices:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DayOfWeekMinPriceRequest'
+                  description: Year-round minimum nightly prices keyed by weekday.
+                seasonal-day-of-week-min-prices:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SeasonalDayOfWeekMinPriceRequest'
+                  description: Weekday-specific nightly min prices limited to seasonal ranges.
+                seasonal-prices:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SeasonalPricesRequest'
+                  description: Seasonal nightly min/max price overrides.
+                seasonal-monthly-prices:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SeasonalMonthlyPricesRequest'
+                  description: Seasonal monthly min/max price overrides.
+      required:
+      - data
+    CheckinCheckoutDaysCustomizationTypeEnum:
+      type: string
+      enum:
+      - checkin-checkout-day-customizations
+    DynamicGapPriceAdjustmentsRequest:
+      type: object
+      description: Whether Beyond sets the gap price adjustments from market booking trends.
+      properties:
+        enabled:
+          type: boolean
+          description: 'Whether dynamic gap price adjustments are enabled. While enabled, Beyond adjusts gaps of up to 3 nights from market booking trends and `gap-price-adjustments` are not applied. Only available in some markets: elsewhere, enabling is ignored and this stays `false`.'
+      required:
+      - enabled
+    SeasonalCheckinCheckoutDaysRequest:
+      type: object
+      description: Check-in and checkout day restrictions limited to a seasonal date range.
+      properties:
+        start-date:
+          type: string
+          format: date
+          description: First date the seasonal rule applies.
+        end-date:
+          type: string
+          format: date
+          description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
+        checkin-days:
+          type:
+          - array
+          - 'null'
+          items:
+            enum:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+            type: string
+            description: '* `monday` - monday
+
+              * `tuesday` - tuesday
+
+              * `wednesday` - wednesday
+
+              * `thursday` - thursday
+
+              * `friday` - friday
+
+              * `saturday` - saturday
+
+              * `sunday` - sunday'
+          description: Weekdays guests are allowed to check in during the seasonal range, or `null` to keep the year-round `checkin-days`. A `GET` returns `[]` when the season blocks every check-in; a `PATCH` cannot send `[]`.
+        checkout-days:
+          type:
+          - array
+          - 'null'
+          items:
+            enum:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+            type: string
+            description: '* `monday` - monday
+
+              * `tuesday` - tuesday
+
+              * `wednesday` - wednesday
+
+              * `thursday` - thursday
+
+              * `friday` - friday
+
+              * `saturday` - saturday
+
+              * `sunday` - sunday'
+          description: Weekdays guests are allowed to check out during the seasonal range, or `null` to keep the year-round `checkout-days`. A `GET` returns `[]` when the season blocks every checkout; a `PATCH` cannot send `[]`.
+      required:
+      - end-date
+      - start-date
+    OccupancyBasedPricingCustomizationTypeEnum:
+      type: string
+      enum:
+      - occupancy-based-pricing-customizations
+    SeasonalDayOfWeekMinStay:
       type: object
       description: Weekday-specific minimum stays limited to a date range.
       properties:
@@ -637,10 +3266,14 @@ components:
           type: string
           format: date
           description: Last date the seasonal rule applies.
+        rollover:
+          type: boolean
+          default: false
+          description: Whether the seasonal rule repeats every year on the same dates. A repeating range must be shorter than one year.
         min-stays:
           type: array
           items:
-            $ref: '#/components/schemas/DayOfWeekMinStayRequest'
+            $ref: '#/components/schemas/DayOfWeekMinStay'
           description: Seven weekday entries describing the min stay for each day.
       required:
       - end-date
@@ -690,275 +3323,7 @@ components:
           items:
             $ref: '#/components/schemas/SeasonalMonthlyPrices'
           description: Seasonal monthly min/max price overrides.
-    MinStaysCustomizationNested:
-      type: object
-      description: Min-stays customization nested in the aggregate response.
-      properties:
-        min-stay:
-          type:
-          - integer
-          - 'null'
-          minimum: 1
-          description: Default minimum stay, in nights, for the listing.
-        gap-fill-min-stay:
-          allOf:
-          - $ref: '#/components/schemas/GapFillMinStay'
-          description: Year-round orphan-gap min-stay settings.
-        seasonal-min-stays:
-          type: array
-          items:
-            $ref: '#/components/schemas/SeasonalMinStay'
-          description: Seasonal min-stay overrides keyed by date range.
-        last-minute-min-stays:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimeBasedMinStay'
-          description: Year-round lead-time min-stay rules.
-        day-of-week-min-stays:
-          type: array
-          items:
-            $ref: '#/components/schemas/DayOfWeekMinStay'
-          description: Year-round minimum stays keyed by weekday.
-        seasonal-day-of-week-min-stays:
-          type: array
-          items:
-            $ref: '#/components/schemas/SeasonalDayOfWeekMinStay'
-          description: Weekday-specific minimum stays limited to seasonal ranges.
-        seasonal-gap-fill-min-stays:
-          type: array
-          items:
-            $ref: '#/components/schemas/SeasonalGapFillMinStay'
-          description: Gap-fill min-stay settings limited to seasonal ranges.
-        seasonal-time-based-min-stays:
-          type: array
-          items:
-            $ref: '#/components/schemas/SeasonalTimeBasedMinStay'
-          description: Lead-time min-stay rules limited to seasonal ranges.
-    DayOfWeekMinStay:
-      type: object
-      description: A minimum-stay override for a specific weekday.
-      properties:
-        weekday:
-          allOf:
-          - $ref: '#/components/schemas/WeekdayEnum'
-          description: 'Day of week this override applies to.
-
-
-            * `monday` - monday
-
-            * `tuesday` - tuesday
-
-            * `wednesday` - wednesday
-
-            * `thursday` - thursday
-
-            * `friday` - friday
-
-            * `saturday` - saturday
-
-            * `sunday` - sunday'
-        min-stay:
-          type:
-          - integer
-          - 'null'
-          minimum: 1
-          description: Minimum stay, in nights, to require on that weekday.
-      required:
-      - weekday
-    BasePriceCustomization:
-      type: object
-      required:
-      - type
-      - id
-      additionalProperties: false
-      properties:
-        type:
-          allOf:
-          - $ref: '#/components/schemas/BasePriceCustomizationTypeEnum'
-          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
-        id: {}
-        attributes:
-          type: object
-          properties:
-            base-price:
-              type: integer
-              minimum: 10
-              description: Default nightly base price for the listing. Must be at least 10.
-          required:
-          - base-price
-    DayOfWeekMinPrice:
-      type: object
-      description: A nightly minimum-price override for a specific weekday.
-      properties:
-        weekday:
-          allOf:
-          - $ref: '#/components/schemas/WeekdayEnum'
-          description: 'Day of week this override applies to.
-
-
-            * `monday` - monday
-
-            * `tuesday` - tuesday
-
-            * `wednesday` - wednesday
-
-            * `thursday` - thursday
-
-            * `friday` - friday
-
-            * `saturday` - saturday
-
-            * `sunday` - sunday'
-        min-price:
-          type:
-          - integer
-          - 'null'
-          minimum: 5
-          description: Minimum nightly price to use on that weekday.
-      required:
-      - weekday
-    SeasonalDayOfWeekMinPriceRequest:
-      type: object
-      description: Weekday-specific nightly minimum prices limited to a date range.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        min-prices:
-          type: array
-          items:
-            $ref: '#/components/schemas/DayOfWeekMinPriceRequest'
-          description: Seven weekday entries describing the min price for each day.
-      required:
-      - end-date
-      - min-prices
-      - start-date
-    TimeBasedAdjustmentCustomizationResourceTypeEnum:
-      type: string
-      enum:
-      - time-based-adjustment-customizations
-    SeasonalTimeBasedMinStay:
-      type: object
-      description: Lead-time min-stay rules limited to a seasonal date range.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        exclude:
-          type: boolean
-          default: false
-          description: Whether this range excludes seasonal lead-time min-stay rules.
-        time-based-min-stays:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimeBasedMinStay'
-          description: Lead-time min-stay rules that apply only within the seasonal range.
-      required:
-      - end-date
-      - start-date
-    SeasonalMonthlyPricesRequest:
-      type: object
-      description: A date-scoped monthly min/max price override.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        rollover:
-          type: boolean
-          default: false
-          description: Whether the seasonal rule repeats across the year boundary.
-        monthly-min-price:
-          type:
-          - number
-          - 'null'
-          format: double
-          minimum: 5
-          description: Minimum monthly price for the seasonal range.
-        monthly-max-price:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Maximum monthly price for the seasonal range.
-      required:
-      - end-date
-      - start-date
-    ListingCustomizationResourceTypeEnum:
-      type: string
-      enum:
-      - listing-customizations
-    DayOfWeekMinStayRequest:
-      type: object
-      description: A minimum-stay override for a specific weekday.
-      properties:
-        weekday:
-          allOf:
-          - $ref: '#/components/schemas/WeekdayEnum'
-          description: 'Day of week this override applies to.
-
-
-            * `monday` - monday
-
-            * `tuesday` - tuesday
-
-            * `wednesday` - wednesday
-
-            * `thursday` - thursday
-
-            * `friday` - friday
-
-            * `saturday` - saturday
-
-            * `sunday` - sunday'
-        min-stay:
-          type:
-          - integer
-          - 'null'
-          minimum: 1
-          description: Minimum stay, in nights, to require on that weekday.
-      required:
-      - weekday
-    TimeBasedAdjustment:
-      type: object
-      description: A lead-time-based price adjustment rule.
-      properties:
-        days:
-          type: integer
-          minimum: 1
-          description: Lead-time threshold, in days, that triggers the adjustment.
-        percentage:
-          type: integer
-          maximum: 100
-          description: Adjustment percent, where 20 means +20% and -20 means -20%.
-        direction:
-          allOf:
-          - $ref: '#/components/schemas/DirectionEnum'
-          description: 'How to count the lead-time threshold: `within` for bookings within N days, `after` for bookings N or more days away.
-
-
-            * `within` - within
-
-            * `after` - after'
-      required:
-      - days
-      - direction
-      - percentage
-    PatchedExtraGuestFeeCustomizationRequest:
+    PatchedManualOverridesCustomizationRequest:
       type: object
       properties:
         data:
@@ -972,31 +3337,21 @@ components:
               type: string
               description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
               enum:
-              - extra-guest-fee-customizations
-            id: {}
+              - manual-override-customizations
+            id:
+              type: string
+              minLength: 1
+              description: Customization resource identifier, returned as the listing ID.
             attributes:
               type: object
               properties:
-                extra-guest-fee:
-                  type:
-                  - integer
-                  - 'null'
-                  minimum: 1
-                  description: Per-guest fee charged once the booking exceeds the extra guest threshold.
-                extra-guest-threshold:
-                  type:
-                  - integer
-                  - 'null'
-                  minimum: 1
-                  description: Number of guests included before the extra guest fee applies.
-                id:
-                  type: string
-                  readOnly: true
-                  minLength: 1
-                  description: Customization resource identifier, returned as the listing ID.
+                overrides:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ManualOverrideRequest'
+                  description: Manual price overrides keyed by date range.
               required:
-              - extra-guest-fee
-              - extra-guest-threshold
+              - overrides
       required:
       - data
     WeekdayEnum:
@@ -1022,920 +3377,6 @@ components:
         * `saturday` - saturday
 
         * `sunday` - sunday'
-    TimeBasedMinStayRequest:
-      type: object
-      description: A lead-time-based minimum-stay rule.
-      properties:
-        days-away:
-          type: integer
-          minimum: 1
-          description: Lead-time threshold, in days, that triggers the rule.
-        direction:
-          allOf:
-          - $ref: '#/components/schemas/DirectionEnum'
-          description: 'How to count the lead-time threshold: `within` for bookings within N days, `after` for bookings N or more days away.
-
-
-            * `within` - within
-
-            * `after` - after'
-        min-stay:
-          type: integer
-          minimum: 1
-          description: Minimum stay, in nights, to require when the rule matches.
-      required:
-      - days-away
-      - direction
-      - min-stay
-    SeasonalMinStay:
-      type: object
-      description: A date-scoped minimum-stay override.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        rollover:
-          type: boolean
-          default: false
-          description: Whether the seasonal rule repeats across the year boundary.
-        min-stay:
-          type: integer
-          minimum: 1
-          description: Minimum required stay, in nights, for the seasonal range.
-        min-stay-locked:
-          type: boolean
-          default: false
-          description: Whether this seasonal min stay is locked against automatic changes.
-      required:
-      - end-date
-      - min-stay
-      - start-date
-    BasePriceCustomizationNested:
-      type: object
-      description: Base price customization nested in the aggregate response.
-      properties:
-        base-price:
-          type: integer
-          minimum: 10
-          description: Default nightly base price for the listing. Must be at least 10.
-      required:
-      - base-price
-    ExtraGuestFeeCustomization:
-      type: object
-      required:
-      - type
-      - id
-      additionalProperties: false
-      properties:
-        type:
-          allOf:
-          - $ref: '#/components/schemas/ExtraGuestFeeCustomizationResourceTypeEnum'
-          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
-        id: {}
-        attributes:
-          type: object
-          properties:
-            extra-guest-fee:
-              type:
-              - integer
-              - 'null'
-              minimum: 1
-              description: Per-guest fee charged once the booking exceeds the extra guest threshold.
-            extra-guest-threshold:
-              type:
-              - integer
-              - 'null'
-              minimum: 1
-              description: Number of guests included before the extra guest fee applies.
-          required:
-          - extra-guest-fee
-          - extra-guest-threshold
-    SeasonalTimeBasedAdjustmentRequest:
-      type: object
-      description: Lead-time price adjustments limited to a seasonal date range.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        time-based-adjustments:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimeBasedAdjustmentRequest'
-          description: Lead-time price adjustments that apply within the seasonal range.
-        exclude:
-          type: boolean
-          default: false
-          description: Whether this range excludes seasonal lead-time price adjustments.
-        rollover:
-          type: boolean
-          default: false
-          description: Whether the seasonal rule repeats across the year boundary.
-      required:
-      - end-date
-      - start-date
-    SeasonalPrices:
-      type: object
-      description: A date-scoped nightly min/max price override.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        rollover:
-          type: boolean
-          default: false
-          description: Whether the seasonal rule repeats across the year boundary.
-        min-price:
-          type:
-          - number
-          - 'null'
-          format: double
-          minimum: 5
-          description: Minimum nightly price for the seasonal range.
-        max-price:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Maximum nightly price for the seasonal range.
-      required:
-      - end-date
-      - start-date
-    SeasonalGapFillMinStay:
-      type: object
-      description: Gap-fill min-stay settings limited to a seasonal date range.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        gap-fill-min-stay:
-          allOf:
-          - $ref: '#/components/schemas/GapFillMinStay'
-          description: Gap-fill settings to apply within the seasonal range.
-      required:
-      - end-date
-      - gap-fill-min-stay
-      - start-date
-    SeasonalPricesRequest:
-      type: object
-      description: A date-scoped nightly min/max price override.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        rollover:
-          type: boolean
-          default: false
-          description: Whether the seasonal rule repeats across the year boundary.
-        min-price:
-          type:
-          - number
-          - 'null'
-          format: double
-          minimum: 5
-          description: Minimum nightly price for the seasonal range.
-        max-price:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Maximum nightly price for the seasonal range.
-      required:
-      - end-date
-      - start-date
-    DayOfWeekMinPriceRequest:
-      type: object
-      description: A nightly minimum-price override for a specific weekday.
-      properties:
-        weekday:
-          allOf:
-          - $ref: '#/components/schemas/WeekdayEnum'
-          description: 'Day of week this override applies to.
-
-
-            * `monday` - monday
-
-            * `tuesday` - tuesday
-
-            * `wednesday` - wednesday
-
-            * `thursday` - thursday
-
-            * `friday` - friday
-
-            * `saturday` - saturday
-
-            * `sunday` - sunday'
-        min-price:
-          type:
-          - integer
-          - 'null'
-          minimum: 5
-          description: Minimum nightly price to use on that weekday.
-      required:
-      - weekday
-    TimeBasedAdjustmentsCustomization:
-      type: object
-      required:
-      - type
-      - id
-      additionalProperties: false
-      properties:
-        type:
-          allOf:
-          - $ref: '#/components/schemas/TimeBasedAdjustmentCustomizationResourceTypeEnum'
-          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
-        id: {}
-        attributes:
-          type: object
-          properties:
-            time-based-adjustments:
-              type: array
-              items:
-                $ref: '#/components/schemas/TimeBasedAdjustment'
-              description: Year-round lead-time price adjustments.
-            seasonal-time-based-adjustments:
-              type: array
-              items:
-                $ref: '#/components/schemas/SeasonalTimeBasedAdjustment'
-              description: Lead-time price adjustments limited to seasonal ranges.
-            dynamic-time-based-adjustments:
-              allOf:
-              - $ref: '#/components/schemas/DynamicTimeBasedAdjustmentsRequest'
-              description: Current dynamic recommendation settings.
-    ListingCustomizationsResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/ListingCustomizations'
-      required:
-      - data
-    TimeBasedAdjustmentsCustomizationNested:
-      type: object
-      description: Time-based adjustments customization nested in the aggregate response.
-      properties:
-        time-based-adjustments:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimeBasedAdjustment'
-          description: Year-round lead-time price adjustments.
-        seasonal-time-based-adjustments:
-          type: array
-          items:
-            $ref: '#/components/schemas/SeasonalTimeBasedAdjustment'
-          description: Lead-time price adjustments limited to seasonal ranges.
-        dynamic-time-based-adjustments:
-          allOf:
-          - $ref: '#/components/schemas/DynamicTimeBasedAdjustmentsRequest'
-          description: Current dynamic recommendation settings.
-    MinStaysCustomizationResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/MinStaysCustomization'
-      required:
-      - data
-    SeasonalDayOfWeekMinStay:
-      type: object
-      description: Weekday-specific minimum stays limited to a date range.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        min-stays:
-          type: array
-          items:
-            $ref: '#/components/schemas/DayOfWeekMinStay'
-          description: Seven weekday entries describing the min stay for each day.
-      required:
-      - end-date
-      - min-stays
-      - start-date
-    DynamicTimeBasedAdjustmentsRequest:
-      type: object
-      description: Request payload for auto-generated time-based pricing recommendations.
-      properties:
-        enabled:
-          type: boolean
-          description: Whether dynamic time-based adjustments are enabled.
-        tier:
-          allOf:
-          - $ref: '#/components/schemas/TierEnum'
-          description: 'Optimization goal for recommendations. Must be `revenue`, `occupancy`, or `rate`.
-
-
-            * `revenue` - revenue
-
-            * `occupancy` - occupancy
-
-            * `rate` - rate'
-    DynamicTimeBasedAdjustmentsRequestRequest:
-      type: object
-      description: Request payload for auto-generated time-based pricing recommendations.
-      properties:
-        enabled:
-          type: boolean
-          description: Whether dynamic time-based adjustments are enabled.
-        tier:
-          allOf:
-          - $ref: '#/components/schemas/TierEnum'
-          description: 'Optimization goal for recommendations. Must be `revenue`, `occupancy`, or `rate`.
-
-
-            * `revenue` - revenue
-
-            * `occupancy` - occupancy
-
-            * `rate` - rate'
-    MinMaxPriceCustomizationResourceTypeEnum:
-      type: string
-      enum:
-      - min-max-price-customizations
-    SeasonalMonthlyPrices:
-      type: object
-      description: A date-scoped monthly min/max price override.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        rollover:
-          type: boolean
-          default: false
-          description: Whether the seasonal rule repeats across the year boundary.
-        monthly-min-price:
-          type:
-          - number
-          - 'null'
-          format: double
-          minimum: 5
-          description: Minimum monthly price for the seasonal range.
-        monthly-max-price:
-          type:
-          - number
-          - 'null'
-          format: double
-          description: Maximum monthly price for the seasonal range.
-      required:
-      - end-date
-      - start-date
-    PatchedMinMaxPricesCustomizationRequest:
-      type: object
-      properties:
-        data:
-          type: object
-          required:
-          - type
-          - id
-          additionalProperties: false
-          properties:
-            type:
-              type: string
-              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
-              enum:
-              - min-max-price-customizations
-            id: {}
-            attributes:
-              type: object
-              properties:
-                min-price:
-                  type:
-                  - number
-                  - 'null'
-                  format: double
-                  minimum: 5
-                  description: Default minimum nightly price for the listing.
-                max-price:
-                  type:
-                  - number
-                  - 'null'
-                  format: double
-                  description: Default maximum nightly price for the listing.
-                monthly-min-price:
-                  type:
-                  - number
-                  - 'null'
-                  format: double
-                  minimum: 5
-                  description: Default minimum monthly price for the listing.
-                day-of-week-min-prices:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/DayOfWeekMinPriceRequest'
-                  description: Year-round minimum nightly prices keyed by weekday.
-                seasonal-day-of-week-min-prices:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/SeasonalDayOfWeekMinPriceRequest'
-                  description: Weekday-specific nightly min prices limited to seasonal ranges.
-                seasonal-prices:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/SeasonalPricesRequest'
-                  description: Seasonal nightly min/max price overrides.
-                seasonal-monthly-prices:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/SeasonalMonthlyPricesRequest'
-                  description: Seasonal monthly min/max price overrides.
-                id:
-                  type: string
-                  readOnly: true
-                  minLength: 1
-                  description: Customization resource identifier, returned as the listing ID.
-      required:
-      - data
-    ListingCustomizations:
-      type: object
-      required:
-      - type
-      - id
-      additionalProperties: false
-      properties:
-        type:
-          allOf:
-          - $ref: '#/components/schemas/ListingCustomizationResourceTypeEnum'
-          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
-        id: {}
-        attributes:
-          type: object
-          properties:
-            base-price:
-              allOf:
-              - $ref: '#/components/schemas/BasePriceCustomizationNested'
-              description: Base price customization, as returned by the base-price endpoint.
-            extra-guest-fees:
-              allOf:
-              - $ref: '#/components/schemas/ExtraGuestFeeCustomizationNested'
-              description: Extra guest fee customization, as returned by the extra-guest-fees endpoint.
-            min-max-prices:
-              allOf:
-              - $ref: '#/components/schemas/MinMaxPricesCustomizationNested'
-              description: Min/max prices customization, as returned by the min-max-prices endpoint.
-            min-stays:
-              allOf:
-              - $ref: '#/components/schemas/MinStaysCustomizationNested'
-              description: Min-stays customization, as returned by the min-stays endpoint.
-            time-based-adjustments:
-              allOf:
-              - $ref: '#/components/schemas/TimeBasedAdjustmentsCustomizationNested'
-              description: Time-based adjustments customization, as returned by the time-based-adjustments endpoint.
-    GapFillMinStayRequest:
-      type: object
-      description: Gap-fill settings used to raise min stays around short orphan gaps.
-      properties:
-        enabled:
-          type: boolean
-          description: Whether orphan-gap min-stay protection is enabled.
-        gaps:
-          type:
-          - integer
-          - 'null'
-          minimum: 1
-          description: Maximum orphan-gap length, in nights, that should trigger the rule.
-        buffer:
-          type:
-          - integer
-          - 'null'
-          minimum: 0
-          description: Extra nights around the gap that still count toward the rule.
-    SeasonalGapFillMinStayRequest:
-      type: object
-      description: Gap-fill min-stay settings limited to a seasonal date range.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        gap-fill-min-stay:
-          allOf:
-          - $ref: '#/components/schemas/GapFillMinStayRequest'
-          description: Gap-fill settings to apply within the seasonal range.
-      required:
-      - end-date
-      - gap-fill-min-stay
-      - start-date
-    SeasonalTimeBasedAdjustment:
-      type: object
-      description: Lead-time price adjustments limited to a seasonal date range.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        time-based-adjustments:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimeBasedAdjustment'
-          description: Lead-time price adjustments that apply within the seasonal range.
-        exclude:
-          type: boolean
-          default: false
-          description: Whether this range excludes seasonal lead-time price adjustments.
-        rollover:
-          type: boolean
-          default: false
-          description: Whether the seasonal rule repeats across the year boundary.
-      required:
-      - end-date
-      - start-date
-    DirectionEnum:
-      enum:
-      - within
-      - after
-      type: string
-      description: '* `within` - within
-
-        * `after` - after'
-    SeasonalDayOfWeekMinPrice:
-      type: object
-      description: Weekday-specific nightly minimum prices limited to a date range.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        min-prices:
-          type: array
-          items:
-            $ref: '#/components/schemas/DayOfWeekMinPrice'
-          description: Seven weekday entries describing the min price for each day.
-      required:
-      - end-date
-      - min-prices
-      - start-date
-    MinStaysCustomization:
-      type: object
-      required:
-      - type
-      - id
-      additionalProperties: false
-      properties:
-        type:
-          allOf:
-          - $ref: '#/components/schemas/MinStayCustomizationResourceTypeEnum'
-          description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
-        id: {}
-        attributes:
-          type: object
-          properties:
-            min-stay:
-              type:
-              - integer
-              - 'null'
-              minimum: 1
-              description: Default minimum stay, in nights, for the listing.
-            gap-fill-min-stay:
-              allOf:
-              - $ref: '#/components/schemas/GapFillMinStay'
-              description: Year-round orphan-gap min-stay settings.
-            seasonal-min-stays:
-              type: array
-              items:
-                $ref: '#/components/schemas/SeasonalMinStay'
-              description: Seasonal min-stay overrides keyed by date range.
-            last-minute-min-stays:
-              type: array
-              items:
-                $ref: '#/components/schemas/TimeBasedMinStay'
-              description: Year-round lead-time min-stay rules.
-            day-of-week-min-stays:
-              type: array
-              items:
-                $ref: '#/components/schemas/DayOfWeekMinStay'
-              description: Year-round minimum stays keyed by weekday.
-            seasonal-day-of-week-min-stays:
-              type: array
-              items:
-                $ref: '#/components/schemas/SeasonalDayOfWeekMinStay'
-              description: Weekday-specific minimum stays limited to seasonal ranges.
-            seasonal-gap-fill-min-stays:
-              type: array
-              items:
-                $ref: '#/components/schemas/SeasonalGapFillMinStay'
-              description: Gap-fill min-stay settings limited to seasonal ranges.
-            seasonal-time-based-min-stays:
-              type: array
-              items:
-                $ref: '#/components/schemas/SeasonalTimeBasedMinStay'
-              description: Lead-time min-stay rules limited to seasonal ranges.
-    MinMaxPricesCustomizationResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/MinMaxPricesCustomization'
-      required:
-      - data
-    TimeBasedMinStay:
-      type: object
-      description: A lead-time-based minimum-stay rule.
-      properties:
-        days-away:
-          type: integer
-          minimum: 1
-          description: Lead-time threshold, in days, that triggers the rule.
-        direction:
-          allOf:
-          - $ref: '#/components/schemas/DirectionEnum'
-          description: 'How to count the lead-time threshold: `within` for bookings within N days, `after` for bookings N or more days away.
-
-
-            * `within` - within
-
-            * `after` - after'
-        min-stay:
-          type: integer
-          minimum: 1
-          description: Minimum stay, in nights, to require when the rule matches.
-      required:
-      - days-away
-      - direction
-      - min-stay
-    PatchedTimeBasedAdjustmentsCustomizationRequest:
-      type: object
-      properties:
-        data:
-          type: object
-          required:
-          - type
-          - id
-          additionalProperties: false
-          properties:
-            type:
-              type: string
-              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
-              enum:
-              - time-based-adjustment-customizations
-            id: {}
-            attributes:
-              type: object
-              properties:
-                time-based-adjustments:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/TimeBasedAdjustmentRequest'
-                  description: Year-round lead-time price adjustments.
-                seasonal-time-based-adjustments:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/SeasonalTimeBasedAdjustmentRequest'
-                  description: Lead-time price adjustments limited to seasonal ranges.
-                id:
-                  type: string
-                  readOnly: true
-                  minLength: 1
-                  description: Customization resource identifier, returned as the listing ID.
-                dynamic-time-based-adjustments:
-                  allOf:
-                  - $ref: '#/components/schemas/DynamicTimeBasedAdjustmentsRequestRequest'
-                  description: Current dynamic recommendation settings.
-      required:
-      - data
-    BasePriceCustomizationTypeEnum:
-      type: string
-      enum:
-      - base-price-customizations
-    PatchedMinStaysCustomizationRequest:
-      type: object
-      properties:
-        data:
-          type: object
-          required:
-          - type
-          - id
-          additionalProperties: false
-          properties:
-            type:
-              type: string
-              description: The [type](https://jsonapi.org/format/#document-resource-object-identification) member is used to describe resource objects that share common attributes and relationships.
-              enum:
-              - min-stay-customizations
-            id: {}
-            attributes:
-              type: object
-              properties:
-                min-stay:
-                  type:
-                  - integer
-                  - 'null'
-                  minimum: 1
-                  description: Default minimum stay, in nights, for the listing.
-                gap-fill-min-stay:
-                  allOf:
-                  - $ref: '#/components/schemas/GapFillMinStayRequest'
-                  description: Year-round orphan-gap min-stay settings.
-                seasonal-min-stays:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/SeasonalMinStayRequest'
-                  description: Seasonal min-stay overrides keyed by date range.
-                last-minute-min-stays:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/TimeBasedMinStayRequest'
-                  description: Year-round lead-time min-stay rules.
-                day-of-week-min-stays:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/DayOfWeekMinStayRequest'
-                  description: Year-round minimum stays keyed by weekday.
-                seasonal-day-of-week-min-stays:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/SeasonalDayOfWeekMinStayRequest'
-                  description: Weekday-specific minimum stays limited to seasonal ranges.
-                seasonal-gap-fill-min-stays:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/SeasonalGapFillMinStayRequest'
-                  description: Gap-fill min-stay settings limited to seasonal ranges.
-                seasonal-time-based-min-stays:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/SeasonalTimeBasedMinStayRequest'
-                  description: Lead-time min-stay rules limited to seasonal ranges.
-                id:
-                  type: string
-                  readOnly: true
-                  minLength: 1
-                  description: Customization resource identifier, returned as the listing ID.
-      required:
-      - data
-    SeasonalTimeBasedMinStayRequest:
-      type: object
-      description: Lead-time min-stay rules limited to a seasonal date range.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        exclude:
-          type: boolean
-          default: false
-          description: Whether this range excludes seasonal lead-time min-stay rules.
-        time-based-min-stays:
-          type: array
-          items:
-            $ref: '#/components/schemas/TimeBasedMinStayRequest'
-          description: Lead-time min-stay rules that apply only within the seasonal range.
-      required:
-      - end-date
-      - start-date
-    SeasonalMinStayRequest:
-      type: object
-      description: A date-scoped minimum-stay override.
-      properties:
-        start-date:
-          type: string
-          format: date
-          description: First date the seasonal rule applies.
-        end-date:
-          type: string
-          format: date
-          description: Last date the seasonal rule applies.
-        rollover:
-          type: boolean
-          default: false
-          description: Whether the seasonal rule repeats across the year boundary.
-        min-stay:
-          type: integer
-          minimum: 1
-          description: Minimum required stay, in nights, for the seasonal range.
-        min-stay-locked:
-          type: boolean
-          default: false
-          description: Whether this seasonal min stay is locked against automatic changes.
-      required:
-      - end-date
-      - min-stay
-      - start-date
-    ExtraGuestFeeCustomizationResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/ExtraGuestFeeCustomization'
-      required:
-      - data
-    GapFillMinStay:
-      type: object
-      description: Gap-fill settings used to raise min stays around short orphan gaps.
-      properties:
-        enabled:
-          type: boolean
-          description: Whether orphan-gap min-stay protection is enabled.
-        gaps:
-          type:
-          - integer
-          - 'null'
-          minimum: 1
-          description: Maximum orphan-gap length, in nights, that should trigger the rule.
-        buffer:
-          type:
-          - integer
-          - 'null'
-          minimum: 0
-          description: Extra nights around the gap that still count toward the rule.
-    ExtraGuestFeeCustomizationNested:
-      type: object
-      description: Extra guest fee customization nested in the aggregate response.
-      properties:
-        extra-guest-fee:
-          type:
-          - integer
-          - 'null'
-          minimum: 1
-          description: Per-guest fee charged once the booking exceeds the extra guest threshold.
-        extra-guest-threshold:
-          type:
-          - integer
-          - 'null'
-          minimum: 1
-          description: Number of guests included before the extra guest fee applies.
-      required:
-      - extra-guest-fee
-      - extra-guest-threshold
-    TimeBasedAdjustmentRequest:
-      type: object
-      description: A lead-time-based price adjustment rule.
-      properties:
-        days:
-          type: integer
-          minimum: 1
-          description: Lead-time threshold, in days, that triggers the adjustment.
-        percentage:
-          type: integer
-          maximum: 100
-          description: Adjustment percent, where 20 means +20% and -20 means -20%.
-        direction:
-          allOf:
-          - $ref: '#/components/schemas/DirectionEnum'
-          description: 'How to count the lead-time threshold: `within` for bookings within N days, `after` for bookings N or more days away.
-
-
-            * `within` - within
-
-            * `after` - after'
-      required:
-      - days
-      - direction
-      - percentage
-    MinStayCustomizationResourceTypeEnum:
-      type: string
-      enum:
-      - min-stay-customizations
-    ExtraGuestFeeCustomizationResourceTypeEnum:
-      type: string
-      enum:
-      - extra-guest-fee-customizations
   securitySchemes:
     oauth2:
       type: oauth2
@@ -1954,6 +3395,12 @@ components:
             insights:read: Read market insights
             compsets:read: Read competitive set data
             neyoba:ask: Ask Neyoba
+            beyond:read: Read listings, performance, and market data via the Beyond MCP server
+            beyond:write: Modify pricing and listing settings via the Beyond MCP server
+            beyond:skills: Load Beyond revenue-management skills via the Beyond MCP server
+            beyond:usage: Read tool-call history and usage via the Beyond MCP server
+            webhooks:read: Read delivered webhook events
+            webhooks:write: Modify webhook configuration
     personalAccessToken:
       type: http
       scheme: bearer

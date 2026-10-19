@@ -226,6 +226,16 @@ apis:
     url: https://developers.beyondpricing.com/getting-started/
   - type: Authentication
     url: https://developers.beyondpricing.com/getting-started/authentication/
+- aid: beyond-pricing:beyond-pricing-reservations-api
+  name: Beyond Pricing Reservations API
+  description: The Reservations API from Beyond Pricing — 1 operation(s) for reservations.
+  humanURL: https://developers.beyondpricing.com/
+  baseURL: https://developers.beyondpricing.com/api/v1
+  tags:
+  - Reservations
+  properties:
+  - type: OpenAPI
+    url: openapi/beyond-pricing-reservations-api-openapi.yml
 common:
 - type: OpenAPI
   url: openapi/_original/beyond-pricing-openapi-original.yml
