@@ -1712,3 +1712,9 @@ components:
       scheme: bearer
       bearerFormat: PersonalAccessToken
       description: Paste a `bpat_...` personal access token. PATs use the same Bearer header as OAuth2 tokens and must still include the runtime-required scopes for each endpoint, even though OpenAPI cannot encode scopes for non-OAuth bearer schemes.
+x-provenance:
+  method: harvested
+  publisher: Beyond Pricing
+  source: https://developers.beyondpricing.com/api/v1/schema/
+  note: split by refine-openapis from the provider's own published document, verified by fetch (openapi/_original/*.fetch.json);
+    stamped by stamp-openapi-provenance.py (roadmap#793)
